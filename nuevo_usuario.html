@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Gestión de Usuarios</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body, html {
+            margin: 0; padding: 0; min-height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white; background-color: #1a1a1a;
+        }
+
+        #main-content { display: none; }
+
+        .background {
+            background-image: url('login.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; padding: 30px; width: 100%; max-width: 850px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); margin-bottom: 30px;
+        }
+
+        h2, h3 { text-align: center; font-weight: 300; margin-top: 0; color: #e0e0e0; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #bbb; }
+
+        input, select {
+            width: 100%; padding: 10px; background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: white; outline: none;
+        }
+
+        .permissions-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;
+        }
+
+        .scroll-box {
+            height: 120px; overflow-y: auto; background: rgba(255,255,255,0.05);
+            padding: 10px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .check-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
+        .check-item input { width: auto; margin-right: 10px; cursor: pointer; }
+
+        .btn-container { display: flex; gap: 15px; margin-top: 25px; }
+        
+        .btn-guardar { 
+            flex: 2; background: linear-gradient(180deg, #9da4ad 0%, #5e6671 100%); 
+            border: none; color: #1a2533; padding: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; 
+        }
+
+        .btn-update { background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%) !important; }
+
+        .btn-volver { flex: 1; background: transparent; border: 1px solid white; color: white; border-radius: 8px; cursor: pointer; }
+
+        .table-container { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        
+        .actions-cell { display: flex; gap: 5px; }
+        .btn-eliminar { background: #ff4d4d; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .btn-editar { background: #4da3ff; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="main-content" class="background">
+    <div class="glass-panel">
+        <h2 id="titulo-form">Registro y Permisos de Usuario</h2>
+        
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label>Apellido y Nombre:</label>
+                <input type="text" id="nombre">
+            </div>
+            <div class="form-group full-width">
+                <label>E-mail (Recuperación):</label>
+                <input type="email" id="email" placeholder="ejemplo@vialidad.gob.ar">
+            </div>
+            <div class="form-group">
+                <label>Cargo:</label>
+                <select id="cargo">
+                    <option>Director Const.</option>
+                    <option>Inspector</option>
+                    <option>Sobrestante</option>
+                    <option>Laboratorista</option>
+                    <option>Ayudante</option>
+                    <option>Administracion Central</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Usuario:</label>
+                <input type="text" id="usuario">
+            </div>
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" id="p1">
+            </div>
+            <div class="form-group">
+                <label>Repetir Contraseña:</label>
+                <input type="password" id="p2">
+            </div>
+        </div>
+
+        <div class="permissions-container">
+            <div>
+                <label>Afectado a Obra:</label>
+                <div class="scroll-box" id="listaObrasChecks">
+                    <div class="check-item"><input type="checkbox" value="Ruta Provincial N° 20 - Tramo A"> Ruta Provincial N° 20</div>
+                    <div class="check-item"><input type="checkbox" value="Mantenimiento Puente Río Luján"> Puente Río Luján</div>
+                    <div class="check-item"><input type="checkbox" value="Repavimentación Av. Central"> Av. Central</div>
+                </div>
+            </div>
+            <div>
+                <label>Nivel de Acceso:</label>
+                <div class="scroll-box" id="permisosRadios">
+                    <div class="check-item"><input type="radio" name="permiso" value="Acceso total"> Acceso Total</div>
+                    <div class="check-item"><input type="radio" name="permiso" value="Acceso Laboratorio"> Acceso Laboratorio</div>
+                    <div class="check-item"><input type="radio" name="permiso" value="Solo Lectura"> Solo Lectura</div>
+                    <div class="check-item"><input type="radio" name="permiso" value="Acceso control de obra"> Control de Obra</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-guardar" id="btn-accion" onclick="guardarUsuario()">GUARDAR USUARIO</button>
+            <button class="btn-volver" onclick="window.location.href='obras.html'">VOLVER</button>
+        </div>
+    </div>
+
+    <div class="glass-panel">
+        <h3>Listado de Agentes Registrados (Nube)</h3>
+        <div class="table-container">
+            <table id="tablaAgentes">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cargo</th>
+                        <th>Usuario</th>
+                        <th>Obras</th>
+                        <th>Permiso</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    let modoEdicion = false;
+    let currentId = null;
+
+    // Validación de entrada
+    (function() {
+        const claveAdmin = "3141592654";
+        const ingreso = prompt("Ingrese la contraseña de Administrador para gestionar usuarios:");
+        if (ingreso === claveAdmin) {
+            document.getElementById('main-content').style.display = 'flex';
+            cargarTabla();
+        } else {
+            alert("Contraseña incorrecta.");
+            window.location.href = 'obras.html';
+        }
+    })();
+
+    async function cargarTabla() {
+        const tbody = document.querySelector('#tablaAgentes tbody');
+        tbody.innerHTML = "<tr><td colspan='6'>Cargando datos desde la nube...</td></tr>";
+
+        try {
+            const { data, error } = await _supabase.from('usuarios').select('*').order('nombre', { ascending: true });
+            
+            if (error) throw error;
+
+            tbody.innerHTML = ""; 
+            data.forEach((a) => {
+                tbody.innerHTML += `<tr>
+                    <td>${a.nombre}</td>
+                    <td>${a.cargo}</td>
+                    <td>${a.usuario}</td>
+                    <td><small>${a.obras || 'Sin obras'}</small></td>
+                    <td>${a.permiso}</td>
+                    <td class="actions-cell">
+                        <button class="btn-editar" onclick='prepararEdicion(${JSON.stringify(a)})'>EDITAR</button>
+                        <button class="btn-eliminar" onclick="eliminar(${a.id})">X</button>
+                    </td>
+                </tr>`;
+            });
+        } catch (err) {
+            alert("Error al cargar tabla: " + err.message);
+        }
+    }
+
+    async function guardarUsuario() {
+        const nombre = document.getElementById('nombre').value;
+        const email = document.getElementById('email').value;
+        const cargo = document.getElementById('cargo').value;
+        const user = document.getElementById('usuario').value;
+        const p1 = document.getElementById('p1').value;
+        const p2 = document.getElementById('p2').value;
+        const obras = Array.from(document.querySelectorAll('#listaObrasChecks input:checked')).map(cb => cb.value);
+        const permiso = document.querySelector('input[name="permiso"]:checked')?.value;
+
+        if (!nombre || !email || !user || !permiso) {
+            alert("Complete nombre, email, usuario y nivel de acceso.");
+            return;
+        }
+
+        if (!modoEdicion && (p1 === "" || p1 !== p2)) {
+            alert("Las contraseñas no coinciden o están vacías.");
+            return;
+        }
+
+        const datos = { 
+            nombre, email, cargo, usuario: user, 
+            obras: obras.join(", "), permiso 
+        };
+
+        // Solo agregamos la clave si se escribió algo (para no sobreescribir con vacío en edición)
+        if (p1 !== "") datos.clave = p1;
+
+        try {
+            if (!modoEdicion) {
+                // INSERTAR
+                const { error } = await _supabase.from('usuarios').insert([datos]);
+                if (error) throw error;
+                alert("Usuario creado en la nube.");
+            } else {
+                // ACTUALIZAR
+                const { error } = await _supabase.from('usuarios').update(datos).eq('id', currentId);
+                if (error) throw error;
+                alert("Usuario actualizado correctamente.");
+            }
+            
+            resetFormulario();
+            cargarTabla();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    }
+
+    function prepararEdicion(agente) {
+        modoEdicion = true;
+        currentId = agente.id;
+
+        document.getElementById('nombre').value = agente.nombre;
+        document.getElementById('email').value = agente.email;
+        document.getElementById('cargo').value = agente.cargo;
+        document.getElementById('usuario').value = agente.usuario;
+        
+        // Checkboxes de obras
+        document.querySelectorAll('#listaObrasChecks input').forEach(cb => {
+            cb.checked = agente.obras ? agente.obras.includes(cb.value) : false;
+        });
+
+        // Radios de permiso
+        document.querySelectorAll('input[name="permiso"]').forEach(rb => {
+            rb.checked = (rb.value === agente.permiso);
+        });
+
+        const btn = document.getElementById('btn-accion');
+        btn.innerText = "ACTUALIZAR DATOS";
+        btn.classList.add('btn-update');
+        document.getElementById('titulo-form').innerText = "Editando: " + agente.nombre;
+        document.getElementById('p1').placeholder = "Dejar en blanco para no cambiar";
+        document.getElementById('p2').placeholder = "Dejar en blanco para no cambiar";
+        window.scrollTo(0,0);
+    }
+
+    async function eliminar(id) {
+        if(confirm("¿Eliminar este usuario de la base de datos permanentemente?")) {
+            try {
+                const { error } = await _supabase.from('usuarios').delete().eq('id', id);
+                if (error) throw error;
+                alert("Usuario eliminado.");
+                cargarTabla();
+            } catch (err) {
+                alert("Error al eliminar: " + err.message);
+            }
+        }
+    }
+
+    function resetFormulario() {
+        modoEdicion = false;
+        currentId = null;
+        document.getElementById('nombre').value = "";
+        document.getElementById('email').value = "";
+        document.getElementById('usuario').value = "";
+        document.getElementById('p1').value = "";
+        document.getElementById('p1').placeholder = "";
+        document.getElementById('p2').value = "";
+        document.getElementById('p2').placeholder = "";
+        document.getElementById('btn-accion').innerText = "GUARDAR USUARIO";
+        document.getElementById('btn-accion').classList.remove('btn-update');
+        document.getElementById('titulo-form').innerText = "Registro y Permisos de Usuario";
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => el.checked = false);
+    }
+</script>
+</body>
+</html>

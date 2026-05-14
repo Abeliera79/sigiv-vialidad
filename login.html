@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Login</title>
+    <!-- Cargamos la librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        .background {
+            background-image: url('login.jpg');
+            background-size: cover; background-position: center; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; padding: 40px; width: 90%; max-width: 450px;
+            text-align: center; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        h2 { margin-top: 0; font-weight: 300; letter-spacing: 1px; font-size: 1.5rem; color: #e0e0e0; }
+
+        .form-group { text-align: left; margin-bottom: 20px; }
+
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
+
+        input {
+            width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px;
+            color: white; outline: none; box-sizing: border-box;
+        }
+
+        input:focus { border-color: #9da4ad; background: rgba(255, 255, 255, 0.2); }
+
+        .btn-principal {
+            background: linear-gradient(180deg, #9da4ad 0%, #5e6671 100%);
+            border: none; color: #1a2533; padding: 15px; width: 100%;
+            font-weight: bold; border-radius: 8px; cursor: pointer;
+            margin-top: 10px; transition: 0.3s;
+        }
+
+        .btn-principal:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        .secondary-actions {
+            margin-top: 25px; display: flex; justify-content: space-between; font-size: 0.85rem;
+        }
+
+        .secondary-actions a { color: #aaa; text-decoration: none; transition: 0.3s; }
+        .secondary-actions a:hover { color: #fff; text-decoration: underline; }
+
+        .btn-salir {
+            margin-top: 20px; background: transparent; border: 1px solid rgba(255, 0, 0, 0.4);
+            color: #ff9999; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;
+        }
+
+        .btn-salir:hover { background: rgba(255, 0, 0, 0.2); }
+
+        .credits { position: absolute; bottom: 20px; right: 30px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="background">
+        <div class="glass-panel">
+            <h2>Acceso a Sistema S.I.G.I.V.</h2>
+            
+            <div class="form-group">
+                <label>Usuario:</label>
+                <input type="text" id="usuario" placeholder="Ingrese su usuario">
+            </div>
+
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+
+            <button class="btn-principal" id="btnEntrar" onclick="validarIngreso()">ENTRAR AL PANEL</button>
+
+            <div class="secondary-actions">
+                <a href="recuperar.html">¿Olvidé Contraseña?</a>
+                <a href="nuevo_usuario.html">Nuevo Usuario</a>
+            </div>
+
+            <button class="btn-salir" onclick="window.location.href='index.html'">Salir</button>
+        </div>
+        <div class="credits">By. Beliera Angel</div>
+    </div>
+
+    <script>
+    // Configuración de conexión
+    const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function validarIngreso() {
+        const userInp = document.getElementById('usuario').value;
+        const passInp = document.getElementById('password').value;
+        const btn = document.getElementById('btnEntrar');
+
+        if (!userInp || !passInp) {
+            alert("Por favor, complete todos los campos.");
+            return;
+        }
+
+        // Acceso Admin de emergencia
+        if (userInp === "admin" && passInp === "3141592654") {
+            window.location.href = 'obras.html';
+            return;
+        }
+
+        btn.innerText = "VERIFICANDO...";
+        btn.disabled = true;
+
+        try {
+            // Buscamos en Supabase el usuario y la clave
+            const { data, error } = await _supabase
+                .from('usuarios')
+                .select('*')
+                .eq('usuario', userInp)
+                .eq('clave', passInp)
+                .single(); // Esperamos un solo resultado
+
+            if (error || !data) {
+                alert("Usuario o contraseña incorrectos. Acceso denegado.");
+            } else {
+                // Guardamos los datos del usuario logueado para usarlos en otras pantallas
+                sessionStorage.setItem('usuarioLogueado', JSON.stringify(data));
+                window.location.href = 'obras.html';
+            }
+        } catch (err) {
+            alert("Error de conexión con el servidor.");
+            console.error(err);
+        } finally {
+            btn.innerText = "ENTRAR AL PANEL";
+            btn.disabled = false;
+        }
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Recuperar Acceso</title>
+    <!-- Librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        .background {
+            background-image: url('login.jpg');
+            background-size: cover; background-position: center;
+            height: 100%; display: flex; justify-content: center; align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; padding: 40px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        h2 { margin-top: 0; font-weight: 300; color: #e0e0e0; margin-bottom: 20px; }
+        p { font-size: 0.9rem; color: #ccc; margin-bottom: 25px; }
+
+        .form-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #bbb; }
+
+        input {
+            width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            color: white; outline: none; box-sizing: border-box;
+        }
+
+        .btn-recuperar {
+            background: linear-gradient(180deg, #9da4ad 0%, #5e6671 100%);
+            border: none; color: #1a2533; padding: 15px; width: 100%;
+            font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s;
+        }
+
+        .btn-recuperar:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        .resultado-box {
+            margin-top: 20px; padding: 15px; border-radius: 8px;
+            background: rgba(0, 255, 0, 0.1); border: 1px solid rgba(0, 255, 0, 0.3);
+            display: none;
+        }
+
+        .btn-volver {
+            margin-top: 20px; display: inline-block; color: #aaa;
+            text-decoration: none; font-size: 0.85rem;
+        }
+
+        .btn-volver:hover { color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="background">
+        <div class="glass-panel">
+            <h2>Recuperar Contraseña</h2>
+            <p>Ingrese su correo oficial para consultar sus credenciales en la nube.</p>
+            
+            <div class="form-group">
+                <label>Correo Electrónico:</label>
+                <input type="email" id="emailRecuperar" placeholder="ejemplo@vialidad.gob.ar">
+            </div>
+
+            <button class="btn-recuperar" id="btn-buscar" onclick="buscarCredenciales()">BUSCAR CREDENCIALES</button>
+
+            <div id="resultado" class="resultado-box">
+                <div style="font-size: 0.8rem; color: #8f8;">¡Datos recuperados con éxito!</div>
+                <div id="infoUser" style="margin-top: 10px; font-weight: bold; color: #fff;"></div>
+            </div>
+
+            <br>
+            <a href="login.html" class="btn-volver">← Volver al Login</a>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function buscarCredenciales() {
+            const emailIngresado = document.getElementById('emailRecuperar').value.toLowerCase().trim();
+            const resultadoBox = document.getElementById('resultado');
+            const infoUser = document.getElementById('infoUser');
+            const btn = document.getElementById('btn-buscar');
+
+            if (!emailIngresado) {
+                alert("Por favor, ingrese un e-mail válido.");
+                return;
+            }
+
+            // UI Feedback
+            btn.innerText = "BUSCANDO...";
+            btn.disabled = true;
+            resultadoBox.style.display = 'none';
+
+            try {
+                // Consulta a Supabase filtrando por email
+                const { data, error } = await _supabase
+                    .from('usuarios')
+                    .select('usuario, clave')
+                    .eq('email', emailIngresado)
+                    .maybeSingle(); // Trae un resultado o null
+
+                if (error) throw error;
+
+                if (data) {
+                    resultadoBox.style.display = 'block';
+                    infoUser.innerHTML = `Usuario: ${data.usuario}<br>Contraseña: ${data.clave}`;
+                } else {
+                    // Verificación manual para la cuenta maestra de admin si no está en tabla
+                    if (emailIngresado === "admin@vialidad.gob.ar") {
+                        resultadoBox.style.display = 'block';
+                        infoUser.innerHTML = "Usuario: admin<br>Clave: 3141592654";
+                    } else {
+                        alert("No existe ningún agente registrado con ese correo.");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión: " + err.message);
+            } finally {
+                btn.innerText = "BUSCAR CREDENCIALES";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

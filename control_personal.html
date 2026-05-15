@@ -2,184 +2,82 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.I.G.I.V. - Control de Personal</title>
     <style>
-        :root {
-            --ocre-light: #b08d5c;
-            --ocre-dark: #6e5535;
-            --glass-bg: rgba(10, 15, 20, 0.85); /* Más transparencia */
-            --glass-header: rgba(176, 141, 92, 0.15);
-            --border-gold: rgba(176, 141, 92, 0.3);
-            --danger: #c0392b;
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a; color: white; overflow-x: hidden;
         }
-
-        body {
-            background: #050a10 url('fondo_personal.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
+        .background {
+            background-image: url('fondo_personal.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 0;
         }
-
-        /* Efecto de cristal para el contenedor principal */
-        .main-container {
-            width: 95%; max-width: 1200px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px); /* Efecto de desenfoque de fondo */
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-gold);
-            border-radius: 16px; padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px; padding: 30px;
+            width: 95%; max-width: 1200px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
         }
-
-        .header-panel {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-gold);
-            padding-bottom: 20px; margin-bottom: 30px;
+        .header-sigiv {
+            text-align: center; border-bottom: 2px solid #ffd700; margin-bottom: 30px;
+            padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
         }
-
-        .section-box {
-            margin-bottom: 35px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(176, 141, 92, 0.15);
-            border-radius: 10px; overflow: hidden;
-        }
-
-        .section-title {
-            background: var(--glass-header);
-            padding: 12px 20px; font-weight: 600; font-size: 0.95rem;
-            display: flex; justify-content: space-between; align-items: center;
-            color: var(--ocre-light); text-transform: uppercase; letter-spacing: 1.5px;
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { 
-            padding: 12px; font-size: 0.7rem; color: #888; 
-            text-transform: uppercase; border-bottom: 1px solid var(--border-gold);
-        }
-        td { padding: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.03); }
-
-        /* Estilo de inputs invisibles hasta que se activa la edición */
-        .field-input {
-            background: transparent; border: 1px solid transparent; color: #fff;
-            text-align: center; width: 90%; font-family: inherit;
-            padding: 6px; border-radius: 4px; transition: 0.2s;
-        }
-
-        .edit-active .field-input { 
-            background: rgba(0, 0, 0, 0.3); 
-            border: 1px solid rgba(176, 141, 92, 0.4); 
-        }
-
-        /* Checkbox estilo S.I.G.I.V. */
-        .check-estado {
-            appearance: none; width: 20px; height: 20px;
-            border: 1px solid var(--ocre-light); border-radius: 4px;
-            cursor: pointer; position: relative; transition: all 0.3s;
-        }
-        .check-estado:checked { background: var(--ocre-light); box-shadow: 0 0 10px var(--ocre-light); }
-        .check-estado:checked::after {
-            content: '✓'; position: absolute; top: -3px; left: 3px;
-            color: #000; font-weight: bold; font-size: 16px;
-        }
-
-        /* Botones refinados */
-        .btn {
-            padding: 8px 16px; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: bold; font-size: 0.7rem;
-            text-transform: uppercase; transition: 0.3s; color: white;
-            letter-spacing: 0.5px;
-        }
-        .btn-add { background: var(--ocre-dark); border: 1px solid var(--ocre-light); }
-        .btn-del { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-        .btn-del:hover { background: var(--danger); color: #fff; }
-        .btn-edit { background: #2980b9; box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3); }
-        .btn-save { background: #27ae60; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); display: none; }
-        
-        .total-box {
-            background: rgba(0,0,0,0.2); padding: 10px 20px;
-            text-align: right; font-weight: bold; color: var(--ocre-light);
-            font-size: 0.85rem; border-top: 1px solid rgba(176, 141, 92, 0.1);
-        }
-
-        .btn-back {
-            background: transparent; border: 1px solid var(--ocre-dark);
-            margin-top: 30px; padding: 12px 30px; color: #aaa;
-        }
-        .btn-back:hover { border-color: var(--ocre-light); color: #fff; background: rgba(176,141,92,0.05); }
-
+        h1 { color: #ffd700; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 3px; font-size: 1.5rem; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: none; font-size: 0.75rem; }
+        .btn-edit { background: #ffd700; color: #000; }
+        .btn-save { background: #27ae60; color: white; display: none; }
+        .btn-add { background: #2980b9; color: white; margin-right: 5px; }
+        .btn-del { background: #c0392b; color: white; }
+        .edit-active .btn-save { display: inline-block; }
+        .edit-active .btn-edit { display: none; }
+        .section-box { margin-bottom: 25px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 12px; overflow: hidden; }
+        .section-title { background: rgba(255, 215, 0, 0.1); padding: 12px 20px; color: #ffd700; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
         .btn-action { visibility: hidden; opacity: 0; transition: 0.3s; }
         .edit-active .btn-action { visibility: visible; opacity: 1; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { padding: 10px; color: #aaa; text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        td { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        .field-input { background: transparent; border: 1px solid transparent; color: white; width: 90%; padding: 5px; text-align: center; outline: none; }
+        .edit-active .field-input { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); }
+        .btn-back { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; text-transform: uppercase; }
+        .btn-back:hover { background: #ff6b6b; color: white; }
     </style>
 </head>
 <body>
-
-<div class="main-container" id="mainWrapper">
-    <div class="header-panel">
-        <div>
-            <h1 style="color:var(--ocre-light); margin:0; font-size:1.5rem; letter-spacing:3px;">CONTROL DE PERSONAL</h1>
-            <p style="margin:5px 0 0 0; font-size:0.7rem; opacity:0.5; text-transform:uppercase;">Sistema de Gestión de Obra Vial</p>
+<div class="background">
+    <div class="glass-panel" id="mainWrapper">
+        <div class="header-sigiv">
+            <div>
+                <h1>Control de Personal</h1>
+                <div id="obra-tag" style="color: #ccc; font-size: 0.9rem; margin-top: 5px; text-align: left;">Obra: Cargando...</div>
+            </div>
+            <div>
+                <button class="btn btn-edit" id="btnEdit" onclick="toggleEdit()">Habilitar Edición</button>
+                <button class="btn btn-save" id="btnSave" onclick="toggleEdit()">Finalizar Edición</button>
+                <button class="btn" style="background:#444; color:white; margin-left: 10px;" onclick="window.print()">Imprimir</button>
+            </div>
         </div>
-        <div style="display: flex; gap: 12px;">
-            <button class="btn btn-edit" id="btnEdit" onclick="toggleEdit()">Habilitar Edición</button>
-            <button class="btn btn-save" id="btnSave" onclick="toggleEdit()">Guardar Cambios</button>
-            <button class="btn" style="background:rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);" onclick="window.print()">Imprimir</button>
-        </div>
+        <div id="sectionsContainer"></div>
+        <button onclick="safeBack()" class="btn-back">⬅ Volver a Administración</button>
     </div>
-
-    <div id="sectionsContainer"></div>
-
-    <button onclick="safeBack()" class="btn btn-back">⬅ VOLVER AL PANEL VIAL</button>
 </div>
-
 <script>
     let editMode = false;
-
-    // Secciones basadas en control personal.xlsx
-   // Secciones basadas en control personal.xlsx actualizadas
-    const planillas = [
-        { id: "jefatura", nombre: "Jefatura de Obra", opciones: ["....", "Jefe Obra", "Representante Tecnico", "Sobrestante", "Encargado"] },
-        { id: "admin", nombre: "Administración de Obra", opciones: ["....", "Administrador", "Ayudante Administracion", "Sereno", "Pañolero"] },
-        { id: "suelo", nombre: "Equipo Movimiento de Suelo", opciones: ["....", "Maquinista", "Chofer", "Ayudante", "Capataz"] },
-        { id: "asfalto", nombre: "Equipo Carpeta Asfáltica", opciones: ["....", "Maquinista", "Rastrillero", "Chofer", "Ayudante", "Puntero", "Colero"] },
-        { id: "hormigon", nombre: "Equipo Hormigón", opciones: ["....", "Oficial", "Medio Oficial", "Ayudante", "Equipista", "Maquinista"] },
-        { id: "cantera", nombre: "Equipo Cantera", opciones: ["....", "Encargado", "Maquinista", "Chofer", "Clasificador"] },
-        { id: "topo", nombre: "Equipo Topografía", opciones: ["....", "Topografo", "Instrumentista", "Portamira", "Ayudante"] },
-        { id: "taller", nombre: "Equipo Taller", opciones: ["....", "Mecanico", "Electricista", "Gomero", "Soldador", "Ayudante"] },
-        { id: "planta", nombre: "Equipo Planta de Asfalto", opciones: ["....", "Operador Planta", "Cargador", "Ayudante", "Calderista", "Encargado"] },
-        { id: "labo", nombre: "Equipo Laboratorio", opciones: ["....", "Laboratorista", "Ayudante"] },
-        { id: "grales", nombre: "Equipo Tareas Generales", opciones: ["....", "Chofer", "Cuadrilla", "Ayudante", "Limpieza"] },
-        { id: "inspeccion", nombre: "Equipo Inspeccion de Obra", opciones: ["....", "Jefe Dir.", "Inspector", "Conductor", "Laboratorista", "Sobrestante", "Ayudante", "Personal Central"] }
-    ];
+    const opcionesCargos = ["....", "Rep. Técnico", "Jefe Obra", "Ayudante Técnico", "Tec. Seg. Higiene", "Proyectista", "Administrador", "Ayudante Admin.", "Encargado Compras", "Jefe taller", "Mecánico", "Mantenimiento Eq.", "Pañolero", "Chofer", "Maquinista", "Capataz", "Puntero Cuadrilla", "Plantista", "Calderista", "Juntero", "Ayudante", "Sereno"];
+    const planillas = [{ id: "jefatura", nombre: "Jefatura de Obra" }, { id: "admin", nombre: "Administración de Obra" }, { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, { id: "hormigon", nombre: "Equipo Hormigón" }, { id: "cantera", nombre: "Equipo Cantera" }, { id: "topo", nombre: "Equipo Topografía" }, { id: "taller", nombre: "Equipo Taller" }, { id: "planta", nombre: "Equipo Planta de Asfalto" }, { id: "labo", nombre: "Equipo Laboratorio" }, { id: "grales", nombre: "Equipo Tareas Generales" }, { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }];
 
     function renderPlanillas() {
         const container = document.getElementById('sectionsContainer');
+        const obraActual = sessionStorage.getItem('obraActual') || "No seleccionada";
+        document.getElementById('obra-tag').innerText = "Obra: " + obraActual;
+        
+        container.innerHTML = ""; 
         planillas.forEach(p => {
             const div = document.createElement('div');
             div.className = 'section-box';
-            div.innerHTML = `
-                <div class="section-title">
-                    ${p.nombre}
-                    <div class="btn-action">
-                        <button class="btn btn-add" onclick="addRow('${p.id}')">+ Fila</button>
-                        <button class="btn btn-del" onclick="deleteRows('${p.id}')">×</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="40">Sel.</th>
-                            <th>Apellido</th>
-                            <th>Nombre</th>
-                            <th>Asignado a...</th>
-                            <th width="80">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-${p.id}"></tbody>
-                </table>
-                <div class="total-box">TOTAL ACTIVO: <span id="total-${p.id}">0</span></div>
-            `;
+            div.innerHTML = '<div class="section-title">' + p.nombre + '<div class="btn-action"><button class="btn btn-add" onclick="addRow(\'' + p.id + '\')">+ Fila</button><button class="btn btn-del" onclick="deleteRows(\'' + p.id + '\')">Eliminar</button></div></div><table><thead><tr><th width="40">Sel.</th><th>Apellido</th><th>Nombre</th><th>Cargo / Especialidad</th><th width="80">Presente</th></tr></thead><tbody id="body-' + p.id + '"></tbody></table><div class="total-box">ACTIVOS EN SECCIÓN: <span id="total-' + p.id + '">0</span></div>';
             container.appendChild(div);
         });
     }
@@ -192,51 +90,34 @@
     }
 
     function addRow(id) {
-        if(!editMode) return;
-        const pData = planillas.find(p => p.id === id);
-        const tbody = document.getElementById(`body-${id}`);
+        const tbody = document.getElementById('body-' + id);
         const row = document.createElement('tr');
-        let opts = pData.opciones.map(o => `<option>${o}</option>`).join('');
-
-        row.innerHTML = `
-            <td><input type="checkbox" class="row-check"></td>
-            <td><input type="text" class="field-input" placeholder="Apellido"></td>
-            <td><input type="text" class="field-input" placeholder="Nombre"></td>
-            <td><select class="field-input">${opts}</select></td>
-            <td><input type="checkbox" class="check-estado" onchange="countActive('${id}')"></td>
-        `;
+        let opts = opcionesCargos.map(o => '<option value="' + o + '">' + o + '</option>').join('');
+        row.innerHTML = '<td><input type="checkbox" class="row-check"></td><td><input type="text" class="field-input" placeholder="Apellido"></td><td><input type="text" class="field-input" placeholder="Nombre"></td><td><select class="field-input">' + opts + '</select></td><td><input type="checkbox" class="check-estado" onchange="countActive(\'' + id + '\')"></td>';
         tbody.appendChild(row);
     }
 
     function countActive(id) {
-        const count = document.querySelectorAll(`#body-${id} .check-estado:checked`).length;
-        document.getElementById(`total-${id}`).innerText = count;
+        const count = document.querySelectorAll('#body-' + id + ' .check-estado:checked').length;
+        document.getElementById('total-' + id).innerText = count;
     }
 
     function deleteRows(id) {
-        const checks = document.querySelectorAll(`#body-${id} .row-check:checked`);
-        if(checks.length === 0) return;
-        if(confirm("¿Eliminar filas seleccionadas?")) {
+        const checks = document.querySelectorAll('#body-' + id + ' .row-check:checked');
+        if(checks.length > 0 && confirm("¿Eliminar?")) {
             checks.forEach(c => c.closest('tr').remove());
             countActive(id);
         }
     }
 
-    window.addEventListener('beforeunload', (e) => {
-        if (editMode) {
-            e.preventDefault();
-            e.returnValue = ''; 
-        }
-    });
-
     function safeBack() {
+        const destino = 'administracion_obra.html'; 
         if (editMode) {
-            if (confirm("⚠️ Tienes el modo EDICIÓN activo. Si sales perderás los cambios. ¿Deseas salir?")) {
-                editMode = false;
-                window.location.href = 'administracion.html';
+            if (confirm("⚠️ El modo EDICIÓN está activo. ¿Deseas salir?")) {
+                window.location.href = destino;
             }
         } else {
-            window.location.href = 'administracion.html';
+            window.location.href = destino;
         }
     }
 

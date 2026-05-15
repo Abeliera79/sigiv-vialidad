@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Registro de Nueva Obra</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body, html {
+            margin: 0; padding: 0; min-height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+        }
+
+        .background {
+            background-image: url('login.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.2); /* Un poco más opaco */
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px; padding: 30px; width: 100%; max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); margin-bottom: 30px;
+        }
+
+        /* Textos más oscuros para legibilidad */
+        h2, h3 { text-align: center; font-weight: bold; margin-top: 0; color: #1a1a1a; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #111; font-weight: 600; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+
+        input {
+            width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.6);
+            border: 1px solid #333; border-radius: 8px; color: #000; outline: none;
+            box-sizing: border-box; font-weight: 500;
+        }
+
+        input::placeholder { color: #555; }
+
+        .btn-container { display: flex; gap: 15px; margin-top: 25px; }
+        
+        .btn-guardar { 
+            flex: 2; background: linear-gradient(180deg, #444 0%, #000 100%); 
+            border: none; color: white; padding: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; 
+        }
+
+        .btn-update { background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%) !important; color: #000 !important; }
+
+        .btn-volver { 
+            flex: 1; background: transparent; border: 2px solid #1a1a1a; 
+            color: #1a1a1a; font-weight: bold; border-radius: 8px; cursor: pointer; 
+        }
+
+        .table-container { overflow-x: auto; margin-top: 15px; background: rgba(255,255,255,0.4); border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #000; }
+        th { background: rgba(0,0,0,0.1); padding: 12px; text-align: left; border-bottom: 2px solid #000; }
+        td { padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.2); }
+        
+        .actions-cell { display: flex; gap: 5px; }
+        .btn-eliminar { background: #d32f2f; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-editar { background: #1976d2; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="background">
+    <div class="glass-panel">
+        <h2 id="titulo-form">Carga Técnica de Nueva Obra</h2>
+        
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label>Nombre de la Obra:</label>
+                <input type="text" id="nombre_obra" placeholder="Ej: Repavimentación Ruta 20">
+            </div>
+            <div class="form-group full-width">
+                <label>Empresa Contratista:</label>
+                <input type="text" id="empresa" placeholder="Nombre de la constructora">
+            </div>
+            <div class="form-group">
+                <label>Núm. Contrato:</label>
+                <input type="text" id="n_contrato">
+            </div>
+            <div class="form-group">
+                <label>Núm. Legajo:</label>
+                <input type="text" id="n_legajo">
+            </div>
+            <div class="form-group full-width">
+                <label>Fecha de Inicio:</label>
+                <input type="date" id="fecha_inicio">
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-guardar" id="btn-accion" onclick="guardarObra()">GUARDAR OBRA</button>
+            <button class="btn-volver" onclick="window.location.href='obras.html'">VOLVER</button>
+        </div>
+    </div>
+
+    <div class="glass-panel">
+        <h3>Listado de Obras en Sistema</h3>
+        <div class="table-container">
+            <table id="tablaObras">
+                <thead>
+                    <tr>
+                        <th>Obra</th>
+                        <th>Empresa</th>
+                        <th>Contrato</th>
+                        <th>Legajo</th>
+                        <th>Inicio</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    let modoEdicion = false;
+    let currentId = null;
+
+    // Cargar tabla al iniciar
+    document.addEventListener('DOMContentLoaded', cargarTabla);
+
+    async function cargarTabla() {
+        const tbody = document.querySelector('#tablaObras tbody');
+        tbody.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
+
+        try {
+            const { data, error } = await _supabase.from('obras').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+
+            tbody.innerHTML = ""; 
+            data.forEach((o) => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${o.nombre_obra}</strong></td>
+                    <td>${o.empresa}</td>
+                    <td>${o.n_contrato}</td>
+                    <td>${o.n_legajo}</td>
+                    <td>${o.fecha_inicio}</td>
+                    <td class="actions-cell">
+                        <button class="btn-editar" onclick='prepararEdicion(${JSON.stringify(o)})'>EDITAR</button>
+                        <button class="btn-eliminar" onclick="eliminar(${o.id})">X</button>
+                    </td>
+                </tr>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function guardarObra() {
+        const nombre_obra = document.getElementById('nombre_obra').value;
+        const empresa = document.getElementById('empresa').value;
+        const n_contrato = document.getElementById('n_contrato').value;
+        const n_legajo = document.getElementById('n_legajo').value;
+        const fecha_inicio = document.getElementById('fecha_inicio').value;
+
+        if (!nombre_obra || !empresa) {
+            alert("El nombre de la obra y la empresa son obligatorios.");
+            return;
+        }
+
+        const datos = { nombre_obra, empresa, n_contrato, n_legajo, fecha_inicio };
+
+        try {
+            if (!modoEdicion) {
+                const { error } = await _supabase.from('obras').insert([datos]);
+                if (error) throw error;
+                alert("Obra registrada con éxito.");
+            } else {
+                const { error } = await _supabase.from('obras').update(datos).eq('id', currentId);
+                if (error) throw error;
+                alert("Obra actualizada.");
+            }
+            resetFormulario();
+            cargarTabla();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    }
+
+    function prepararEdicion(obra) {
+        modoEdicion = true;
+        currentId = obra.id;
+        document.getElementById('nombre_obra').value = obra.nombre_obra;
+        document.getElementById('empresa').value = obra.empresa;
+        document.getElementById('n_contrato').value = obra.n_contrato;
+        document.getElementById('n_legajo').value = obra.n_legajo;
+        document.getElementById('fecha_inicio').value = obra.fecha_inicio;
+
+        const btn = document.getElementById('btn-accion');
+        btn.innerText = "ACTUALIZAR OBRA";
+        btn.classList.add('btn-update');
+        document.getElementById('titulo-form').innerText = "Editando Obra";
+        window.scrollTo(0,0);
+    }
+
+    async function eliminar(id) {
+        if(confirm("¿Seguro que desea eliminar esta obra?")) {
+            try {
+                const { error } = await _supabase.from('obras').delete().eq('id', id);
+                if (error) throw error;
+                cargarTabla();
+            } catch (err) {
+                alert("Error al eliminar.");
+            }
+        }
+    }
+
+    function resetFormulario() {
+        modoEdicion = false;
+        currentId = null;
+        document.querySelectorAll('input').forEach(i => i.value = "");
+        const btn = document.getElementById('btn-accion');
+        btn.innerText = "GUARDAR OBRA";
+        btn.classList.remove('btn-update');
+        document.getElementById('titulo-form').innerText = "Carga Técnica de Nueva Obra";
+    }
+</script>
+</body>
+</html>

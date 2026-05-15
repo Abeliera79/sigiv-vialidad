@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Control General de Equipos</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .background {
+            background-image: url('fondo_equipos.jpg');
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start;
+            padding: 40px 0;
+        }
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.75); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 30px;
+            width: 95%;
+            max-width: 1200px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Cabecera Estilo SIGIV */
+        .header-sigiv {
+            text-align: center;
+            border-bottom: 2px solid #ffd700;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: #ffd700;
+            font-weight: 800;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .obra-tag {
+            color: #e0e0e0;
+            font-size: 1rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Botonera Superior */
+        .controls-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.8rem;
+        }
+
+        .btn-edit { background: #ffd700; color: #000; }
+        .btn-save { background: #27ae60; color: white; display: none; }
+        .btn-add { background: #2980b9; color: white; display: none; }
+        .btn-del { background: #c0392b; color: white; display: none; }
+        .btn-print { background: #555; color: white; }
+
+        .edit-active .btn-add, 
+        .edit-active .btn-del, 
+        .edit-active .btn-save { display: inline-block; }
+        .edit-active .btn-edit { display: none; }
+
+        /* Tabla Estilizada */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            padding: 12px;
+            border-bottom: 2px solid #ffd700;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .field-input {
+            background: transparent;
+            border: 1px solid transparent;
+            color: white;
+            width: 95%;
+            padding: 5px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .edit-active .field-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Checkbox de Activo */
+        .check-activo {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .total-banner {
+            margin-top: 25px;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: right;
+            border: 1px solid #ffd700;
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 10px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover { background: #ff6b6b; color: white; }
+
+        @media print {
+            .btn-back, .controls-top, .btn-add, .btn-del, th:first-child, td:first-child { display: none !important; }
+            .glass-panel { background: white; color: black; box-shadow: none; }
+            h1 { color: black; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="background">
+    <div class="glass-panel" id="mainWrapper">
+        <div class="header-sigiv">
+            <h1>Control General de Equipos</h1>
+            <span id="obra-activa" class="obra-tag">Obra: Cargando...</span>
+        </div>
+
+        <div class="controls-top">
+            <div>
+                <button class="btn btn-edit" onclick="toggleEdit()">Habilitar Edición</button>
+                <button class="btn btn-save" onclick="toggleEdit()">Finalizar Edición</button>
+                <button class="btn btn-add" onclick="addRow()">+ Agregar</button>
+                <button class="btn btn-del" onclick="deleteRows()">Eliminar</button>
+            </div>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="30">Sel.</th>
+                        <th>Interno</th>
+                        <th>Descripción del Equipo</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Responsable</th>
+                        <th>Ingreso</th>
+                        <th>Salida</th>
+                        <th width="60">Activo</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="total-banner">
+            TOTAL EQUIPOS EN OPERACIÓN: <span id="totalEquipos">0</span>
+        </div>
+
+        <button onclick="safeBack()" class="btn-back">⬅ VOLVER AL PANEL ADMIN</button>
+    </div>
+</div>
+
+<script>
+    let editMode = false;
+
+    // Cargar nombre de obra
+    window.onload = function() {
+        const obraActual = sessionStorage.getItem('obraActual');
+        if (obraActual) {
+            document.getElementById('obra-activa').innerText = `Obra: ${obraActual}`;
+        }
+        // Iniciar con 3 filas vacías
+        for(let i=0; i<3; i++) addRow();
+    };
+
+    function toggleEdit() {
+        editMode = !editMode;
+        document.getElementById('mainWrapper').classList.toggle('edit-active');
+    }
+
+    function addRow() {
+        const tbody = document.getElementById('tableBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="checkbox" class="row-check"></td>
+            <td><input type="text" class="field-input" placeholder="000"></td>
+            <td><input type="text" class="field-input" placeholder="..."></td>
+            <td><input type="text" class="field-input"></td>
+            <td><input type="text" class="field-input"></td>
+            <td><input type="text" class="field-input"></td>
+            <td><input type="date" class="field-input"></td>
+            <td><input type="date" class="field-input"></td>
+            <td><input type="checkbox" class="check-activo" onchange="updateTotal()"></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function updateTotal() {
+        const count = document.querySelectorAll('.check-activo:checked').length;
+        document.getElementById('totalEquipos').innerText = count;
+    }
+
+    function deleteRows() {
+        const checks = document.querySelectorAll('.row-check:checked');
+        if(checks.length > 0 && confirm("¿Eliminar equipos seleccionados?")) {
+            checks.forEach(c => c.closest('tr').remove());
+            updateTotal();
+        }
+    }
+
+    function safeBack() {
+        if (editMode) {
+            if (confirm("Está en modo EDICIÓN. ¿Desea salir sin guardar?")) {
+                window.location.href = 'administracion_obra.html';
+            }
+        } else {
+            window.location.href = 'administracion_obra.html';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Señalamiento Vertical</title>
+    <style>
+        :root {
+            --ocre-light: #b08d5c;
+            --ocre-gold: #ffd700;
+            --glass-bg: rgba(10, 15, 20, 0.9);
+            --border-gold: rgba(176, 141, 92, 0.4);
+            --danger: #c0392b;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #050a10 url('fondo_vertical.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .background-overlay {
+            height: 100vh; width: 100vw;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .main-container {
+            width: 97%; max-width: 1450px; height: 92vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px; padding: 25px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            box-sizing: border-box;
+        }
+
+        /* Cabecera */
+        .header-sigiv {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 2px solid var(--ocre-light);
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+
+        h2 { color: var(--ocre-gold); text-transform: uppercase; letter-spacing: 3px; margin: 0; font-size: 1.6rem; }
+
+        .status-bar { font-size: 0.8rem; color: var(--ocre-light); font-weight: bold; }
+
+        /* Controles */
+        .control-panel { display: flex; gap: 12px; margin-bottom: 20px; }
+
+        .btn {
+            padding: 10px 18px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+            font-size: 0.75rem; transition: 0.3s; color: white;
+        }
+        .btn-edit { background: var(--ocre-light); color: #000; }
+        .btn-edit.active { background: var(--ocre-gold); box-shadow: 0 0 15px var(--ocre-gold); }
+        .btn-add { background: #2980b9; }
+        .btn-del { background: var(--danger); }
+
+        /* Tabla */
+        .table-wrapper {
+            flex-grow: 1; overflow-y: auto;
+            border-radius: 10px; background: rgba(0,0,0,0.2);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th {
+            background: rgba(176, 141, 92, 0.2); color: var(--ocre-gold);
+            padding: 12px; text-align: center; position: sticky; top: 0;
+            border-bottom: 2px solid var(--ocre-light); z-index: 5;
+            text-transform: uppercase; font-size: 0.65rem;
+        }
+
+        td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
+
+        .field-input {
+            background: transparent; border: 1px solid transparent;
+            color: white; width: 95%; padding: 4px; text-align: center;
+            border-radius: 4px; outline: none; font-size: 0.8rem;
+        }
+        .edit-mode .field-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(176,141,92,0.3); }
+
+        .ojo-link { cursor: pointer; font-size: 1.2rem; transition: 0.2s; color: var(--ocre-gold); }
+
+        .footer { margin-top: 20px; }
+        .btn-back {
+            background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b;
+            padding: 10px 25px; border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+
+        @media print {
+            .control-panel, .footer, th:first-child, td:first-child, input[type="file"] { display: none !important; }
+            .main-container { background: white; color: black; border: none; width: 100%; height: auto; }
+            h2, th { color: black; border-bottom: 2px solid black; }
+            .field-input { color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-overlay">
+    <div class="main-container" id="mainWrapper">
+        <div class="header-sigiv">
+            <div>
+                <h2>Señalamiento Vertical</h2>
+                <div style="font-size: 0.7rem; color: #aaa; margin-top: 4px;">S.I.G.I.V. - Control de Dispositivos de Seguridad</div>
+            </div>
+            <div class="status-bar" id="txtModo">MODO LECTURA</div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-edit" id="btnModo" onclick="toggleEdit()">Habilitar Edición</button>
+            <button class="btn btn-add" id="btnAdd" style="display:none" onclick="agregarFila()">+ Nuevo Cartel</button>
+            <button class="btn btn-del" onclick="eliminarFilas()">Eliminar</button>
+            <button class="btn" style="background:#444" onclick="window.print()">Imprimir</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="30"></th>
+                        <th width="80">Progresiva</th>
+                        <th width="90">Lado</th>
+                        <th width="100">Cód. IRAM</th>
+                        <th width="120">Tipo</th>
+                        <th>Descripción del Cartel</th>
+                        <th width="100">Estado</th>
+                        <th width="120">Soporte</th>
+                        <th width="100">Imagen</th>
+                    </tr>
+                </thead>
+                <tbody id="listaCuerpo">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <button class="btn-back" onclick="volver()">⬅ VOLVER AL PANEL DE OBRA</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let editando = false;
+    let hayCambios = false;
+    let fotos = {};
+
+    const catalogoIRAM = {
+        "P1": { t: "Preventiva", d: "Curva pronunciada" },
+        "P2": { t: "Preventiva", d: "Curva contra-curva" },
+        "R1": { t: "Reglamentaria", d: "Pare" },
+        "R2": { t: "Reglamentaria", d: "Ceda el paso" },
+        "I1": { t: "Informativa", d: "Nomenclador de ruta" }
+    };
+
+    function toggleEdit() {
+        editando = !editando;
+        const wrapper = document.getElementById('mainWrapper');
+        const btn = document.getElementById('btnModo');
+        const btnAdd = document.getElementById('btnAdd');
+        const txt = document.getElementById('txtModo');
+        
+        wrapper.classList.toggle('edit-mode');
+        btn.innerText = editando ? "Bloquear y Guardar" : "Habilitar Edición";
+        btn.classList.toggle('active');
+        btnAdd.style.display = editando ? "inline-block" : "none";
+        txt.innerText = editando ? "EDICIÓN ACTIVA" : "MODO LECTURA";
+        txt.style.color = editando ? "var(--ocre-gold)" : "var(--ocre-light)";
+
+        document.querySelectorAll('.field-input, input[type="file"], .ch-row').forEach(i => i.disabled = !editando);
+    }
+
+    function agregarFila() {
+        const id = Date.now();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="ch-row"></td>
+            <td><input type="text" class="field-input" placeholder="0+000" oninput="hC()"></td>
+            <td>
+                <select class="field-input" onchange="hC()">
+                    <option value="Izquierdo">Izquierdo</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Banquina">Banquina</option>
+                </select>
+            </td>
+            <td><input type="text" class="field-input" placeholder="Ej: P1" oninput="validarIRAM(this)"></td>
+            <td><input type="text" class="field-input v-tipo" readonly></td>
+            <td><input type="text" class="field-input v-desc" placeholder="Descripción..."></td>
+            <td>
+                <select class="field-input" onchange="hC()">
+                    <option value="Óptimo">Óptimo</option>
+                    <option value="Deteriorado">Deteriorado</option>
+                    <option value="Faltante">Faltante</option>
+                </select>
+            </td>
+            <td><input type="text" class="field-input" placeholder="Poste Madera/Metal"></td>
+            <td>
+                <span class="ojo-link" onclick="verFoto(${id})">👁️</span>
+                <input type="file" style="width:70px; font-size:10px" onchange="subirFoto(this, ${id})">
+            </td>
+        `;
+        document.getElementById('listaCuerpo').appendChild(tr);
+        hayCambios = true;
+    }
+
+    function validarIRAM(el) {
+        const cod = el.value.toUpperCase();
+        const fila = el.closest('tr');
+        if(catalogoIRAM[cod]) {
+            fila.querySelector('.v-tipo').value = catalogoIRAM[cod].t;
+            fila.querySelector('.v-desc').value = catalogoIRAM[cod].d;
+        }
+        hC();
+    }
+
+    function hC() { if(editando) hayCambios = true; }
+
+    function subirFoto(input, id) {
+        if(input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { fotos[id] = e.target.result; hayCambios = true; };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function verFoto(id) {
+        if(fotos[id]) {
+            const w = window.open("");
+            w.document.write(`<body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;"><img src="${fotos[id]}" style="max-width:100%;max-height:100%;"></body>`);
+        } else alert("No hay imagen cargada.");
+    }
+
+    function eliminarFilas() {
+        if(!editando) return alert("Habilite edición para borrar.");
+        const sel = document.querySelectorAll('.ch-row:checked');
+        if(sel.length > 0 && confirm("¿Eliminar seleccionados?")) {
+            sel.forEach(s => s.closest('tr').remove());
+            hayCambios = true;
+        }
+    }
+
+    function volver() {
+        if(editando && hayCambios) {
+            if(!confirm("Hay cambios sin guardar. ¿Desea salir?")) return;
+        }
+        window.location.href = 'control_obra.html';
+    }
+
+    window.onload = () => {
+        for(let i=0; i<3; i++) agregarFila();
+        toggleEdit(); toggleEdit(); // Forzar bloqueo inicial
+    };
+</script>
+</body>
+</html>

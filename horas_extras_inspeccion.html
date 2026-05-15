@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Horas Extras Inspección</title>
+    <style>
+        :root { 
+            --vialidad-blue: #005596;
+            --ocre: #b08d5c; 
+            --glass: rgba(10, 20, 35, 0.96); 
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050a10 url('fondo_planillasdpv.jpg') no-repeat center center fixed;
+            background-size: cover; color: #fff;
+        }
+
+        .container { max-width: 1250px; margin: auto; padding: 20px; }
+        
+        .admin-panel { 
+            background: var(--glass); 
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 1px solid var(--ocre); 
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-small { width: 80px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+
+        .excel-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        .excel-table th, .excel-table td { border: 1px solid rgba(176, 141, 92, 0.3); padding: 12px; text-align: left; }
+        .excel-table th { background: rgba(0, 85, 150, 0.3); color: var(--ocre); font-size: 0.8rem; text-transform: uppercase; }
+
+        .btn { padding: 10px 18px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; }
+        .btn-process { background: var(--vialidad-blue); color: #fff; }
+        .btn-process:hover { background: #0070c0; transform: scale(1.02); }
+
+        /* Estilo para Impresión / Planilla Blanca */
+        #seccionHoras { 
+            display: none; 
+            background: white; 
+            color: black; 
+            padding: 40px; 
+            margin-top: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+        }
+
+        .tabla-modelo { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; border: 2px solid black; }
+        .tabla-modelo th, .tabla-modelo td { border: 1px solid black; text-align: center; font-size: 0.75rem; height: 28px; }
+        
+        .header-vialidad { text-align: left; font-weight: bold; font-size: 0.9rem; line-height: 1.2; display: flex; align-items: center; gap: 15px; }
+        
+        .bg-gray { background-color: #d9d9d9 !important; -webkit-print-color-adjust: exact; }
+        .dia-sabado { background-color: #ffcccc !important; -webkit-print-color-adjust: exact; }
+        .dia-domingo { background-color: #ffffcc !important; -webkit-print-color-adjust: exact; }
+        .dia-feriado { background-color: #cceeff !important; -webkit-print-color-adjust: exact; }
+
+        .contenedor-firmas { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; }
+        .espacio-firma { border-top: 1px solid black; padding-top: 10px; font-size: 0.75rem; font-weight: bold; }
+
+        .btn-back-menu { 
+            background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; 
+            padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-back-menu:hover { background: #ff6b6b; color: white; }
+
+        .no-print { display: flex; gap: 15px; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        
+        /* Columna Franco en Edición */
+        .col-franco { width: 40px; background: var(--ocre); color: white; }
+
+        @media print {
+            .no-print, .admin-panel, .col-franco { display: none !important; }
+            .tabla-modelo th:first-child, .tabla-modelo td:first-child { display: none !important; }
+            body { background: white !important; }
+            #seccionHoras { display: block !important; border: none; padding: 0; box-shadow: none; width: 100%; }
+            .tabla-modelo td { height: 24px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-top no-print">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="Logo dpv.png" alt="Logo DPV" class="logo-small">
+            <h2 style="margin:0; color:var(--ocre); letter-spacing: 2px;">HORAS EXTRAS - D.P.V.</h2>
+        </div>
+        <a href="personal_inspeccion.html" class="btn-back-menu">⬅ VOLVER AL MENÚ</a>
+    </div>
+
+    <div class="admin-panel no-print">
+        <h3 style="margin-top:0; font-size:1rem; color:var(--ocre); text-transform: uppercase;">Seleccionar Agente para procesar Horas Extras</h3>
+        <table class="excel-table" id="tablaListaAgentes"></table>
+    </div>
+
+    <div id="seccionHoras">
+        <div class="no-print" style="background:#f8f9fa; padding:20px; border-radius:10px; margin-bottom:20px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+            <div><strong>PERÍODO:</strong> <input type="month" id="pickerFecha" onchange="cargarDatosAsistencia()" style="padding: 5px;"></div>
+            <button class="btn" style="background:#28a745; color:white;" onclick="window.print()">🖨️ IMPRIMIR PLANILLA</button>
+        </div>
+
+        <div class="header-vialidad">
+            <img src="Logo dpv.png" style="width: 50px;">
+            <div>
+                PROVINCIA DE LA PAMPA<br>
+                DIRECCION PROVINCIAL DE VIALIDAD<br>
+                DETALLE DE HORAS EXTRAS DEL PERSONAL DE INSPECCION DE OBRA
+            </div>
+        </div>
+
+        <div style="margin: 20px 0; border: 1px solid black; padding: 15px; font-size: 0.9rem; background: #fafafa;">
+            <div style="display: flex; justify-content: space-between;">
+                <span><strong>AGENTE:</strong> <span id="txtNombre" style="text-decoration: underline;"></span></span>
+                <span><strong>CLASE:</strong> <span id="txtClase" style="text-decoration: underline;"></span></span>
+            </div>
+            <div style="margin-top: 10px; display: flex; gap: 50px;">
+                <span><strong>MES:</strong> <span id="txtMes" style="text-decoration: underline;"></span></span>
+                <span><strong>AÑO:</strong> <span id="txtAnio" style="text-decoration: underline;"></span></span>
+            </div>
+        </div>
+
+        <table class="tabla-modelo">
+            <thead>
+                <tr class="bg-gray">
+                    <th rowspan="2" class="col-franco">F</th>
+                    <th rowspan="2" style="width: 6%;">DÍA</th>
+                    <th colspan="2">HORARIO MAÑANA</th>
+                    <th colspan="2">HORARIO TARDE</th>
+                    <th rowspan="2" style="width: 12%;">HORAS TRABAJADAS</th>
+                    <th rowspan="2" style="width: 12%;">HORAS AL 150 %</th>
+                    <th rowspan="2" style="width: 12%;">HORAS AL 200%</th>
+                </tr>
+                <tr class="bg-gray">
+                    <th>ENTRADA</th><th>SALIDA</th>
+                    <th>ENTRADA</th><th>SALIDA</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoHoras"></tbody>
+            <tfoot>
+                <tr class="bg-gray" style="font-weight: bold;">
+                    <td colspan="6" style="text-align: right; padding-right: 15px;">TOTALES GENERALES</td>
+                    <td id="totalTrabajadas">0</td>
+                    <td id="total150">0</td>
+                    <td id="total200">0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="contenedor-firmas">
+            <div class="espacio-firma">FIRMA AGENTE</div>
+            <div class="espacio-firma">FIRMA REP. TECNICO</div>
+            <div class="espacio-firma">FIRMA INSPECTOR DE OBRA</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Se utiliza la misma base de datos de Asistencia para sincronizar
+    let db = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
+    let agenteActivoIdx = null;
+
+    function actualizarLista() {
+        const tabla = document.getElementById('tablaListaAgentes');
+        tabla.innerHTML = `<tr><th>NOMBRE COMPLETO</th><th>CLASE</th><th>AFILIADO</th><th>ACCIÓN</th></tr>`;
+        db.forEach((agente, i) => {
+            tabla.innerHTML += `<tr>
+                <td>${agente.nombre}</td>
+                <td>${agente.clase || '---'}</td>
+                <td>${agente.afiliado}</td>
+                <td><button class="btn btn-process" onclick="abrirDetalle(${i})">GENERAR DETALLE</button></td>
+            </tr>`;
+        });
+    }
+
+    function abrirDetalle(idx) {
+        agenteActivoIdx = idx;
+        const a = db[idx];
+        document.getElementById('txtNombre').innerText = a.nombre;
+        document.getElementById('txtClase').innerText = a.clase || '---';
+        document.getElementById('seccionHoras').style.display = 'block';
+        const hoy = new Date();
+        document.getElementById('pickerFecha').value = hoy.toISOString().substring(0, 7);
+        cargarDatosAsistencia();
+    }
+
+    function diffHoras(entrada, salida) {
+        if(!entrada || !salida || entrada.trim() === "" || salida.trim() === "") return 0;
+        try {
+            const [h1, m1] = entrada.split(':').map(Number);
+            const [h2, m2] = salida.split(':').map(Number);
+            const min1 = h1 * 60 + (m1 || 0);
+            const min2 = h2 * 60 + (m2 || 0);
+            return Math.max(0, (min2 - min1) / 60);
+        } catch(e) { return 0; }
+    }
+
+    function cargarDatosAsistencia() {
+        const cuerpo = document.getElementById('cuerpoHoras');
+        const mesAnio = document.getElementById('pickerFecha').value;
+        if(!mesAnio) return;
+
+        // Recuperar marcas de franco si existen
+        const dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
+        const keyAgente = agenteActivoIdx + "_" + mesAnio;
+        const datosFrancosMes = dbFrancos[keyAgente] || {};
+
+        const [anio, mes] = mesAnio.split('-');
+        const mesesNombres = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+        document.getElementById('txtMes').innerText = mesesNombres[parseInt(mes)-1];
+        document.getElementById('txtAnio').innerText = anio;
+
+        const diasEnMes = new Date(anio, mes, 0).getDate();
+        const registrosAsistencia = db[agenteActivoIdx].datosPlanilla[mesAnio] || {};
+        
+        cuerpo.innerHTML = '';
+        let sumaT = 0, suma150 = 0, suma200 = 0;
+
+        for(let d=1; d<=diasEnMes; d++) {
+            const r = registrosAsistencia[d] || { m1:'', m2:'', t1:'', t2:'', color: '' };
+            const isFranco = (datosFrancosMes[d]) ? 'checked' : '';
+            
+            const hManana = diffHoras(r.m1, r.m2);
+            const hTarde = diffHoras(r.t1, r.t2);
+            const hTotalDia = hManana + hTarde;
+
+            let h150 = 0, h200 = 0;
+            if(hTotalDia > 0 && r.color !== '') {
+                if(r.color === 'dia-sabado') {
+                    h150 = Math.min(hTotalDia, 4);
+                    h200 = Math.max(0, hTotalDia - 4);
+                } else if(r.color === 'dia-domingo' || r.color === 'dia-feriado') {
+                    h200 = hTotalDia;
+                }
+            }
+
+            suma150 += h150; suma200 += h200; sumaT += (h150 + h200);
+            const esExtra = (h150 + h200) > 0;
+            
+            cuerpo.innerHTML += `
+                <tr class="${r.color}">
+                    <td class="col-franco">
+                        <input type="checkbox" ${isFranco} onchange="toggleMarcaFranco(this, ${d})">
+                    </td>
+                    <td>${d}</td>
+                    <td>${esExtra ? r.m1 : ''}</td>
+                    <td>${esExtra ? r.m2 : ''}</td>
+                    <td>${esExtra ? r.t1 : ''}</td>
+                    <td>${esExtra ? r.t2 : ''}</td>
+                    <td style="font-weight:bold;">${esExtra ? (h150 + h200).toFixed(2) : ''}</td>
+                    <td>${h150 > 0 ? h150.toFixed(2) : ''}</td>
+                    <td>${h200 > 0 ? h200.toFixed(2) : ''}</td>
+                </tr>`;
+        }
+
+        document.getElementById('totalTrabajadas').innerText = sumaT.toFixed(2);
+        document.getElementById('total150').innerText = suma150.toFixed(2);
+        document.getElementById('total200').innerText = suma200.toFixed(2);
+    }
+
+    function toggleMarcaFranco(checkbox, dia) {
+        const mesAnio = document.getElementById('pickerFecha').value;
+        const keyAgente = agenteActivoIdx + "_" + mesAnio;
+        let dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
+        if (!dbFrancos[keyAgente]) dbFrancos[keyAgente] = {};
+        dbFrancos[keyAgente][dia] = checkbox.checked;
+        localStorage.setItem('db_marcas_franco_dpv', JSON.stringify(dbFrancos));
+    }
+
+    window.onload = actualizarLista;
+</script>
+
+</body>
+</html>

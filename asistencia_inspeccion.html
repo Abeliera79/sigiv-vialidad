@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Asistencia Personal Inspección</title>
+    <style>
+        :root { 
+            --vialidad-blue: #005596;
+            --ocre: #b08d5c; 
+            --glass: rgba(10, 20, 35, 0.95); 
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050a10 url('fondos_planillasdpv.jpg') no-repeat center center fixed;
+            background-size: cover; color: #fff;
+        }
+
+        .container { max-width: 1250px; margin: auto; padding: 20px; }
+        
+        /* Panel de Gestión con Estilo Vidrio */
+        .admin-panel { 
+            background: var(--glass); 
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 1px solid var(--ocre); 
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-small { width: 80px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+
+        .excel-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+        .excel-table th, .excel-table td { border: 1px solid rgba(176, 141, 92, 0.3); padding: 12px; text-align: left; }
+        .excel-table th { background: rgba(0, 85, 150, 0.3); color: var(--ocre); font-size: 0.8rem; text-transform: uppercase; }
+
+        .input-admin { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; width: 95%; padding: 8px; border-radius: 5px; outline: none; transition: 0.3s; }
+        .input-admin:focus { border-color: var(--ocre); box-shadow: 0 0 5px var(--ocre); }
+        
+        .btn { padding: 10px 18px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; }
+        .btn-enter { background: var(--vialidad-blue); color: #fff; }
+        .btn-enter:hover { background: #0070c0; transform: scale(1.05); }
+        .btn-delete { background: #c0392b; color: #fff; }
+
+        /* Estilo para Impresión / Planilla Blanca */
+        #seccionPlanilla { display: none; background: white; color: black; padding: 40px; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
+        .leyenda { display: flex; gap: 20px; margin: 15px 0; font-weight: bold; font-size: 0.8rem; flex-wrap: wrap; color: #333; }
+        .caja-color { width: 18px; height: 18px; border: 1px solid #000; display: inline-block; vertical-align: middle; margin-right: 5px; }
+
+        .tabla-principal { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
+        .tabla-principal th, .tabla-principal td { border: 1px solid black; text-align: center; font-size: 0.75rem; height: 30px; }
+        
+        .col-dia { width: 50px; background-color: #eee !important; font-weight: bold; cursor: pointer; }
+
+        /* Colores de Fila */
+        .dia-sabado { background-color: #ffcccc !important; }
+        .dia-domingo { background-color: #ffffcc !important; }
+        .dia-feriado { background-color: #cceeff !important; }
+
+        .btn-back-menu { 
+            background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; 
+            padding: 10px 20px; border-radius: 10px; text-decoration: none; font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-back-menu:hover { background: #ff6b6b; color: white; }
+
+        @media print {
+            .no-print, .admin-panel { display: none !important; }
+            body { background: white !important; }
+            #seccionPlanilla { display: block !important; border: none; padding: 0; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-top no-print">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="Logo dpv.png" alt="Logo DPV" class="logo-small">
+            <h2 style="margin:0; color:var(--ocre); letter-spacing: 2px;">ASISTENCIA DE PERSONAL - D.P.V.</h2>
+        </div>
+        <a href="personal_inspeccion.html" class="btn-back-menu">⬅ VOLVER AL MENÚ</a>
+    </div>
+
+    <div class="admin-panel no-print">
+        <h3 style="margin-top:0; font-size:1rem; color:var(--ocre); text-transform: uppercase;">Registrar Agente de Inspección</h3>
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    <th>Apellido y Nombre</th>
+                    <th>Cargo</th>
+                    <th>Clase</th>
+                    <th>Nº Afiliado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" id="addNombre" class="input-admin" placeholder="Ej: PEREZ JUAN"></td>
+                    <td><input type="text" id="addCargo" class="input-admin" placeholder="Ej: INSPECTOR"></td>
+                    <td><input type="text" id="addClase" class="input-admin" placeholder="IV"></td>
+                    <td><input type="text" id="addAfiliado" class="input-admin" placeholder="0000"></td>
+                    <td><button class="btn btn-enter" onclick="agregarAgente()">CARGAR</button></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 style="margin-top:30px; font-size:1rem; color:var(--ocre); text-transform: uppercase;">Agentes Registrados</h3>
+        <table class="excel-table" id="tablaListaAgentes"></table>
+    </div>
+
+    <div id="seccionPlanilla">
+        <div class="no-print" style="background:#f8f9fa; padding:20px; border-radius:10px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+            <div><strong>MES Y AÑO:</strong> <input type="month" id="pickerFecha" onchange="cambiarPeriodo()" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#28a745; color:white;" onclick="window.print()">🖨️ IMPRIMIR</button>
+                <button class="btn btn-delete" onclick="confirmarBorrarPlanilla()">🗑️ BORRAR DATOS</button>
+                <button class="btn" style="background:#6c757d; color:white;" onclick="cerrarPlanilla()">❌ CERRAR</button>
+            </div>
+        </div>
+
+        <div class="leyenda">
+            <span style="color: black;">REFERENCIAS:</span>
+            <span><div class="caja-color dia-sabado"></div> Sábado</span>
+            <span><div class="caja-color dia-domingo"></div> Domingo</span>
+            <span><div class="caja-color dia-feriado"></div> Feriado</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="text-align: left;">
+                <img src="Logo dpv.png" style="width: 60px;"><br>
+                <small>DIRECCION PROVINCIAL DE VIALIDAD</small>
+            </div>
+            <h2 style="margin:0; text-decoration: underline;">PLANILLA DE ASISTENCIA</h2>
+            <div style="width: 100px;"></div>
+        </div>
+
+        <p style="font-size: 0.9rem;">
+            <strong>Agente:</strong> <span id="txtNombre" style="text-decoration: underline; margin-right: 15px;"></span>
+            <strong>Cargo:</strong> <span id="txtCargo" style="text-decoration: underline; margin-right: 15px;"></span>
+            <strong>Clase:</strong> <span id="txtClase" style="text-decoration: underline; margin-right: 15px;"></span>
+            <strong>Nº Afiliado:</strong> <span id="txtAfiliado" style="text-decoration: underline;"></span>
+        </p>
+
+        <table class="tabla-principal">
+            <thead>
+                <tr style="background: #f2f2f2;">
+                    <th rowspan="2" class="col-dia">DÍA</th>
+                    <th colspan="4">HORARIO MAÑANA</th>
+                    <th colspan="4">HORARIO TARDE</th>
+                </tr>
+                <tr style="background: #f2f2f2;">
+                    <th>ENTRADA</th><th>FIRMA</th><th>SALIDA</th><th>FIRMA</th>
+                    <th>ENTRADA</th><th>FIRMA</th><th>SALIDA</th><th>FIRMA</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoPlanilla"></tbody>
+        </table>
+
+        <div style="margin-top: 50px; display: flex; justify-content: space-around; text-align: center;">
+            <div style="border-top: 1px solid black; width: 200px; padding-top: 10px; font-size: 0.7rem;">FIRMA DEL AGENTE</div>
+            <div style="border-top: 1px solid black; width: 200px; padding-top: 10px; font-size: 0.7rem;">FIRMA JEFE SECCIÓN</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
+    let agenteActivoIdx = null;
+
+    function agregarAgente() {
+        const nom = document.getElementById('addNombre').value;
+        const car = document.getElementById('addCargo').value;
+        const cla = document.getElementById('addClase').value;
+        const afi = document.getElementById('addAfiliado').value;
+        if(nom && car) {
+            db.push({ 
+                nombre: nom.toUpperCase(), 
+                cargo: car.toUpperCase(), 
+                clase: cla.toUpperCase(),
+                afiliado: afi, 
+                datosPlanilla: {} 
+            });
+            guardarDB();
+            actualizarLista();
+            ['addNombre','addCargo','addClase','addAfiliado'].forEach(id => document.getElementById(id).value = '');
+        }
+    }
+
+    function actualizarLista() {
+        const tabla = document.getElementById('tablaListaAgentes');
+        tabla.innerHTML = `<tr><th>NOMBRE COMPLETO</th><th>CLASE</th><th>AFILIADO</th><th>ACCIONES</th></tr>`;
+        db.forEach((agente, i) => {
+            tabla.innerHTML += `<tr>
+                <td>${agente.nombre}</td>
+                <td>${agente.clase || '---'}</td>
+                <td>${agente.afiliado}</td>
+                <td><button class="btn btn-enter" onclick="entrarPlanilla(${i})">ABRIR</button>
+                <button class="btn btn-delete" onclick="eliminarAgente(${i})" style="margin-left:5px">ELIMINAR</button></td>
+            </tr>`;
+        });
+    }
+
+    function entrarPlanilla(idx) {
+        agenteActivoIdx = idx;
+        const a = db[idx];
+        document.getElementById('txtNombre').innerText = a.nombre;
+        document.getElementById('txtCargo').innerText = a.cargo;
+        document.getElementById('txtClase').innerText = a.clase || '---';
+        document.getElementById('txtAfiliado').innerText = a.afiliado || '---';
+        document.getElementById('seccionPlanilla').style.display = 'block';
+        
+        const hoy = new Date();
+        document.getElementById('pickerFecha').value = hoy.toISOString().substring(0, 7);
+        generarDias();
+    }
+
+    function generarDias() {
+        const cuerpo = document.getElementById('cuerpoPlanilla');
+        const mesAnio = document.getElementById('pickerFecha').value;
+        if(!mesAnio) return;
+        const [anio, mes] = mesAnio.split('-');
+        const diasEnMes = new Date(anio, mes, 0).getDate();
+        cuerpo.innerHTML = '';
+        const registros = db[agenteActivoIdx].datosPlanilla[mesAnio] || {};
+
+        for(let d=1; d<=diasEnMes; d++) {
+            const r = registros[d] || { m1:'', m2:'', t1:'', t2:'', color: '' };
+            cuerpo.innerHTML += `
+                <tr id="fila-${d}" class="${r.color}">
+                    <td class="col-dia" onclick="rotarColor(${d})">${d}</td>
+                    <td><input type="text" class="field-input-planilla" value="${r.m1}" onchange="guardarCelda(${d},'m1',this.value)"></td>
+                    <td></td>
+                    <td><input type="text" class="field-input-planilla" value="${r.m2}" onchange="guardarCelda(${d},'m2',this.value)"></td>
+                    <td></td>
+                    <td><input type="text" class="field-input-planilla" value="${r.t1}" onchange="guardarCelda(${d},'t1',this.value)"></td>
+                    <td></td>
+                    <td><input type="text" class="field-input-planilla" value="${r.t2}" onchange="guardarCelda(${d},'t2',this.value)"></td>
+                    <td></td>
+                </tr>`;
+        }
+    }
+
+    function rotarColor(dia) {
+        const fila = document.getElementById(`fila-${dia}`);
+        let nuevoColor = '';
+        if (fila.classList.contains('dia-sabado')) {
+            fila.classList.remove('dia-sabado'); fila.classList.add('dia-domingo'); nuevoColor = 'dia-domingo';
+        } else if (fila.classList.contains('dia-domingo')) {
+            fila.classList.remove('dia-domingo'); fila.classList.add('dia-feriado'); nuevoColor = 'dia-feriado';
+        } else if (fila.classList.contains('dia-feriado')) {
+            fila.classList.remove('dia-feriado'); nuevoColor = '';
+        } else {
+            fila.classList.add('dia-sabado'); nuevoColor = 'dia-sabado';
+        }
+        guardarCelda(dia, 'color', nuevoColor);
+    }
+
+    function guardarCelda(dia, campo, valor) {
+        const mesAnio = document.getElementById('pickerFecha').value;
+        if(!db[agenteActivoIdx].datosPlanilla[mesAnio]) db[agenteActivoIdx].datosPlanilla[mesAnio] = {};
+        if(!db[agenteActivoIdx].datosPlanilla[mesAnio][dia]) db[agenteActivoIdx].datosPlanilla[mesAnio][dia] = {};
+        db[agenteActivoIdx].datosPlanilla[mesAnio][dia][campo] = valor;
+        guardarDB();
+    }
+
+    function guardarDB() { localStorage.setItem('db_asistencia_dpv', JSON.stringify(db)); }
+    function cerrarPlanilla() { document.getElementById('seccionPlanilla').style.display = 'none'; }
+    function cambiarPeriodo() { generarDias(); }
+    function eliminarAgente(i) { if(confirm("¿Eliminar agente?")) { db.splice(i, 1); guardarDB(); actualizarLista(); } }
+    function confirmarBorrarPlanilla() {
+        const mesAnio = document.getElementById('pickerFecha').value;
+        if(confirm(`¿BORRAR DATOS DE ${mesAnio}?`)) {
+            db[agenteActivoIdx].datosPlanilla[mesAnio] = {};
+            guardarDB(); generarDias();
+        }
+    }
+
+    window.onload = actualizarLista;
+</script>
+
+<style>
+    .field-input-planilla { width: 95%; border: none; text-align: center; font-family: inherit; font-size: 0.75rem; background: transparent; outline: none; }
+    .excel-table td { font-size: 0.85rem; }
+</style>
+
+</body>
+</html>

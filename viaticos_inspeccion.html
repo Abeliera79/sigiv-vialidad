@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Viáticos Inspección</title>
+    <style>
+        :root { 
+            --vialidad-blue: #005596;
+            --ocre: #b08d5c; 
+            --glass: rgba(10, 20, 35, 0.96); 
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050a10 url('fondo_planillasdpv.jpg') no-repeat center center fixed;
+            background-size: cover; color: #fff;
+        }
+
+        .container { max-width: 1450px; margin: auto; padding: 20px; }
+        
+        /* Panel de Control Estilo SIGIV */
+        .no-print { 
+            background: var(--glass); 
+            padding: 20px; 
+            border-radius: 20px; 
+            border: 1px solid var(--ocre); 
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            align-items: center; 
+            justify-content: space-between;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        
+        .pinceles { display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.2); }
+        .pincel { width: 28px; height: 28px; border: 2px solid white; cursor: pointer; border-radius: 6px; position: relative; transition: 0.2s; }
+        .pincel:hover { transform: scale(1.1); }
+        .pincel.active::after { content: '✓'; color: white; position: absolute; left: 6px; top: -2px; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 3px #000; }
+
+        /* Hoja de Impresión Profesional */
+        #hojaViaticos { background: white; color: black; padding: 35px; border-radius: 5px; width: 1150px; margin: auto; box-shadow: 0 0 30px rgba(0,0,0,0.6); }
+        
+        .header-img-container { text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px; }
+        .img-header { width: 65%; height: auto; } 
+        
+        .partida-container { text-align: center; margin-top: 25px; }
+        .img-partida { width: 50%; height: auto; border: 1px solid #ddd; } 
+        
+        .tabla-viaticos { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; border: 2px solid black; }
+        .tabla-viaticos th, .tabla-viaticos td { border: 1px solid black; text-align: center; font-size: 0.65rem; height: 24px; }
+        
+        /* Colores Reglamentarios */
+        .dia-sabado { background-color: #ffcccc !important; }
+        .dia-domingo { background-color: #ffffcc !important; }
+        .dia-feriado { background-color: #cceeff !important; }
+        .dia-franco { background-color: #ffeb3b !important; }
+        .dia-vacaciones { background-color: #8bc34a !important; }
+
+        .dia-celda { cursor: pointer; transition: background 0.1s; user-select: none; }
+        .footer-referencia { margin: 20px 0; display: flex; gap: 20px; font-size: 0.7rem; font-weight: bold; justify-content: center; }
+        .ref-box { display: flex; align-items: center; gap: 6px; }
+        .box { width: 16px; height: 16px; border: 1px solid #000; }
+
+        .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-back { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; text-decoration: none; display: inline-block; }
+        .btn-back:hover { background: #ff6b6b; color: white; }
+
+        @media print {
+            .no-print, .btn-back { display: none !important; }
+            body { background: white !important; }
+            #hojaViaticos { border: none; padding: 0; width: 100%; box-shadow: none; }
+            .dia-celda { -webkit-print-color-adjust: exact; }
+            .tabla-viaticos td { height: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="no-print">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <img src="Logo dpv.png" style="width: 60px;">
+            <div>
+                <h2 style="margin:0; color:var(--ocre); letter-spacing: 2px;">PLANILLA DE VIÁTICOS</h2>
+                <div class="pinceles">
+                    <span style="font-size: 0.8rem; font-weight: bold;">PINTAR:</span>
+                    <div class="pincel" id="pincel-normal" style="background: #fff;" onclick="seleccionarPincel('')" title="Normal"></div>
+                    <div class="pincel" id="pincel-franco" style="background: #ffeb3b;" onclick="seleccionarPincel('dia-franco')" title="Franco"></div>
+                    <div class="pincel" id="pincel-vacas" style="background: #8bc34a;" onclick="seleccionarPincel('dia-vacaciones')" title="Vacaciones"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:12px; align-items: center;">
+            <input type="month" id="mesSeleccionado" onchange="renderizarPlanilla()" style="padding: 8px; border-radius: 5px;">
+            <select id="quincenaSeleccionada" onchange="renderizarPlanilla()" style="padding: 8px; border-radius: 5px;">
+                <option value="1">1ra Quincena</option>
+                <option value="2">2da Quincena</option>
+            </select>
+            <button onclick="window.print()" class="btn-action" style="background:#28a745; color:white;">🖨️ Imprimir</button>
+            <a href="personal_inspeccion.html" class="btn-action btn-back">⬅ Volver</a>
+        </div>
+    </div>
+
+    <div id="hojaViaticos">
+        <div class="header-img-container">
+            <img src="encabezado_vialidad.jpg" class="img-header">
+        </div>
+        
+        <div style="font-weight:bold; font-size:1.2rem; text-align:center; margin-bottom:15px; text-decoration: underline;">PLANILLA DE VIÁTICOS FIJOS</div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px;">
+            <span>Dependencia: CONSTRUCCIONES</span>
+            <span>Mes: <span id="labelMes"></span></span>
+            <span>Quincena: <span id="labelQuincena"></span></span>
+        </div>
+
+        <table class="tabla-viaticos">
+            <thead id="cabeceraDias"></thead>
+            <tbody id="cuerpoViaticos"></tbody>
+        </table>
+
+        <div class="footer-referencia">
+            <div class="ref-box"><div class="box" style="background:#ffcccc;"></div> Sábado</div>
+            <div class="ref-box"><div class="box" style="background:#ffffcc;"></div> Domingo</div>
+            <div class="ref-box"><div class="box" style="background:#cceeff;"></div> Feriado</div>
+            <div class="ref-box"><div class="box" style="background:#ffeb3b;"></div> Franco Compensatorio</div>
+            <div class="ref-box"><div class="box" style="background:#8bc34a;"></div> Vacaciones</div>
+        </div>
+
+        <div class="partida-container">
+            <img src="tabla_partida.jpg" class="img-partida">
+        </div>
+
+        <div style="margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center;">
+            <div style="border-top: 1px solid black; margin: 0 40px; padding-top: 8px; font-size: 0.75rem; font-weight: bold;">FIRMA AGENTE</div>
+            <div style="border-top: 1px solid black; margin: 0 40px; padding-top: 8px; font-size: 0.75rem; font-weight: bold;">FIRMA REP. TÉCNICO</div>
+            <div style="border-top: 1px solid black; margin: 0 40px; padding-top: 8px; font-size: 0.75rem; font-weight: bold;">FIRMA INSPECTOR DE OBRA</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sincronización con la base de datos central de Asistencia DPV
+    const db = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
+    let viaticosData = JSON.parse(localStorage.getItem('db_viaticos_fijos_data')) || {};
+    let pincelActual = '';
+
+    function seleccionarPincel(clase) {
+        pincelActual = clase;
+        document.querySelectorAll('.pincel').forEach(p => p.classList.remove('active'));
+        if(clase === 'dia-franco') document.getElementById('pincel-franco').classList.add('active');
+        else if(clase === 'dia-vacaciones') document.getElementById('pincel-vacas').classList.add('active');
+        else document.getElementById('pincel-normal').classList.add('active');
+    }
+
+    function renderizarPlanilla() {
+        const mesAnio = document.getElementById('mesSeleccionado').value;
+        const quin = document.getElementById('quincenaSeleccionada').value;
+        if(!mesAnio) return;
+        const [anio, mes] = mesAnio.split('-').map(Number);
+        const inicio = quin === "1" ? 1 : 16;
+        const fin = quin === "1" ? 15 : new Date(anio, mes, 0).getDate();
+
+        document.getElementById('labelMes').innerText = mes + "/" + anio;
+        document.getElementById('labelQuincena').innerText = quin === "1" ? "1ra" : "2da";
+
+        const cabecera = document.getElementById('cabeceraDias');
+        let filaLetras = `<tr style="background:#f2f2f2;"><th colspan="3" rowspan="2">Apellido y Nombres</th>`;
+        let filaNumeros = `<tr style="background:#f2f2f2;">`;
+
+        for (let d = inicio; d <= fin; d++) {
+            const fecha = new Date(anio, mes - 1, d);
+            const letras = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+            filaLetras += `<th>${letras[fecha.getDay()]}</th>`;
+            filaNumeros += `<th>${d}</th>`;
+        }
+        cabecera.innerHTML = filaLetras + "</tr>" + filaNumeros + "</tr>";
+
+        const cuerpo = document.getElementById('cuerpoViaticos');
+        cuerpo.innerHTML = '';
+
+        db.forEach((agente, idx) => {
+            const keyBase = `${idx}_${mesAnio}_${quin}`;
+            const dataAgente = viaticosData[keyBase] || {};
+            const asistenciaMes = agente.datosPlanilla?.[mesAnio] || {};
+
+            let filaSalida = `<tr><td rowspan="2" style="width:50px;">${agente.afiliado || '---'}</td><td rowspan="2" style="text-align:left; padding-left:8px; font-weight:bold;">${agente.nombre}</td><td style="background:#f9f9f9; font-weight:bold;">S</td>`;
+            let filaRegreso = `<tr><td style="background:#f9f9f9; font-weight:bold;">R</td>`;
+
+            for (let d = inicio; d <= fin; d++) {
+                const diaData = dataAgente[d] || { s: '', r: '', c: '' };
+                let colorClase = diaData.c || asistenciaMes[d]?.color || '';
+                
+                filaSalida += `<td class="dia-celda ${colorClase}" onclick="manejarClick(event, '${keyBase}', ${d}, 's')" oncontextmenu="manejarDerecho(event, '${keyBase}', ${d}, 's')">${diaData.s}</td>`;
+                filaRegreso += `<td class="dia-celda ${colorClase}" onclick="manejarClick(event, '${keyBase}', ${d}, 'r')" oncontextmenu="manejarDerecho(event, '${keyBase}', ${d}, 'r')">${diaData.r}</td>`;
+            }
+            cuerpo.innerHTML += filaSalida + "</tr>" + filaRegreso + "</tr>";
+        });
+    }
+
+    function manejarClick(e, key, dia, tipo) {
+        if(!viaticosData[key]) viaticosData[key] = {};
+        if(!viaticosData[key][dia]) viaticosData[key][dia] = { s: '', r: '', c: '' };
+
+        if(pincelActual !== '') {
+            viaticosData[key][dia].c = (viaticosData[key][dia].c === pincelActual) ? '' : pincelActual;
+        } else {
+            viaticosData[key][dia][tipo] = (viaticosData[key][dia][tipo] === 'X') ? '' : 'X';
+        }
+        actualizarYGuardar();
+    }
+
+    function manejarDerecho(e, key, dia, tipo) {
+        e.preventDefault();
+        const actual = viaticosData[key]?.[dia]?.[tipo] || '';
+        const hora = prompt("Ingresar Hora de Salida/Regreso:", actual);
+        if (hora !== null) {
+            if(!viaticosData[key]) viaticosData[key] = {};
+            if(!viaticosData[key][dia]) viaticosData[key][dia] = { s: '', r: '', c: '' };
+            viaticosData[key][dia][tipo] = hora;
+            actualizarYGuardar();
+        }
+    }
+
+    function actualizarYGuardar() {
+        localStorage.setItem('db_viaticos_fijos_data', JSON.stringify(viaticosData));
+        renderizarPlanilla();
+    }
+
+    window.onload = () => {
+        document.getElementById('mesSeleccionado').value = new Date().toISOString().substring(0, 7);
+        seleccionarPincel(''); 
+        renderizarPlanilla(); 
+    };
+</script>
+</body>
+</html>

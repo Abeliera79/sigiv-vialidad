@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Gestión Documental</title>
+    <style>
+        :root {
+            --ocre-light: #b08d5c;
+            --ocre-dark: #6e5535;
+            --glass-bg: rgba(10, 15, 20, 0.9);
+            --border-gold: rgba(176, 141, 92, 0.4);
+            --danger: #c0392b;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050a10 url('fondo_documentacion.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+
+        .main-wrapper {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .header-sigiv {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--ocre-light);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--ocre-light);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            font-size: 1.6rem;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            border: none;
+            transition: 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .btn-edit { background: var(--ocre-light); color: #000; }
+        .btn-save { background: #27ae60; color: white; display: none; }
+        .btn-add { background: #2980b9; color: white; }
+        .btn-del { background: var(--danger); color: white; }
+        .btn-view { background: #7f8c8d; color: white; padding: 5px 10px; visibility: hidden; }
+
+        .edit-active .btn-save { display: inline-block; }
+        .edit-active .btn-edit { display: none; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background: rgba(176, 141, 92, 0.1);
+            color: var(--ocre-light);
+            padding: 15px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-bottom: 2px solid var(--border-gold);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .field-input {
+            background: transparent;
+            border: 1px solid transparent;
+            color: white;
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .edit-active .field-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-gold);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 30px;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            border: 1px solid var(--ocre-light);
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: var(--ocre-light);
+        }
+
+        .edit-active .custom-file-upload {
+            background: rgba(176, 141, 92, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="table-container" id="mainContainer">
+        <div class="header-sigiv">
+            <h1>Gestión Documental de Obra</h1>
+            <div>
+                <button class="btn btn-edit" id="btnEdit" onclick="toggleEdit()">Habilitar Edición</button>
+                <button class="btn btn-save" id="btnSave" onclick="toggleEdit()">Guardar Cambios</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-add" onclick="addRow()">+ Nueva Documentación</button>
+            <button class="btn btn-del" onclick="deleteRows()">Eliminar Seleccionados</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="30"></th>
+                    <th>Tipo de Documento / Descripción</th>
+                    <th>Fecha de Vencimiento / Emisión</th>
+                    <th>Estado / Referencia</th>
+                    <th>Archivo (PDF/IMG)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="documentTableBody">
+                </tbody>
+        </table>
+
+        <button onclick="safeBack()" class="btn-back">⬅ Volver a Administración</button>
+    </div>
+</div>
+
+<script>
+    let editMode = false;
+
+    function toggleEdit() {
+        editMode = !editMode;
+        document.getElementById('mainContainer').classList.toggle('edit-active');
+        document.getElementById('btnEdit').style.display = editMode ? 'none' : 'inline-block';
+        document.getElementById('btnSave').style.display = editMode ? 'inline-block' : 'none';
+        
+        if(!editMode) {
+            alert("💾 Documentación actualizada correctamente.");
+        }
+    }
+
+    function addRow() {
+        const tbody = document.getElementById('documentTableBody');
+        const row = document.createElement('tr');
+        const rowId = Date.now();
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="row-chk"></td>
+            <td><input type="text" class="field-input" placeholder="Ej: Póliza de Seguro"></td>
+            <td><input type="date" class="field-input"></td>
+            <td><input type="text" class="field-input" placeholder="Vigente / Pendiente"></td>
+            <td>
+                <label class="custom-file-upload">
+                    <input type="file" onchange="handleFile(this, ${rowId})">
+                    📂 Cargar
+                </label>
+                <span id="name-${rowId}" style="font-size: 0.7rem; margin-left: 5px; color: #aaa;"></span>
+            </td>
+            <td>
+                <button class="btn btn-view" id="view-${rowId}" onclick="verArchivo(${rowId})">VER</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    let fileStorage = {}; // Simulación de almacenamiento local de archivos
+
+    function handleFile(input, id) {
+        if(input.files.length > 0) {
+            const file = input.files[0];
+            document.getElementById(`name-${id}`).innerText = file.name;
+            document.getElementById(`view-${id}`).style.visibility = 'visible';
+            
+            // Creamos una URL temporal para previsualizar
+            fileStorage[id] = URL.createObjectURL(file);
+        }
+    }
+
+    function verArchivo(id) {
+        if(fileStorage[id]) {
+            window.open(fileStorage[id], '_blank');
+        }
+    }
+
+    function deleteRows() {
+        const checks = document.querySelectorAll('.row-chk:checked');
+        if(checks.length === 0) return alert("Seleccione los documentos a eliminar.");
+        
+        if(confirm("¿Seguro que desea eliminar los registros seleccionados?")) {
+            checks.forEach(c => c.closest('tr').remove());
+        }
+    }
+
+    function safeBack() {
+        const destino = 'administracion_obra.html';
+        if (editMode) {
+            if (confirm("⚠️ El modo EDICIÓN está activo. ¿Deseas salir sin guardar los cambios?")) {
+                window.location.href = destino;
+            }
+        } else {
+            window.location.href = destino;
+        }
+    }
+
+    // Agregar una fila inicial por cortesía
+    window.onload = addRow;
+</script>
+
+</body>
+</html>

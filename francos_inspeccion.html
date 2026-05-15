@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Gestión de Francos D.P.V.</title>
+    <style>
+        :root { 
+            --vialidad-blue: #005596;
+            --ocre: #b08d5c; 
+            --glass: rgba(10, 15, 20, 0.98); 
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1c20 url('fondo_planillasdpv.jpg') no-repeat center center fixed;
+            background-size: cover; color: #fff;
+        }
+
+        /* PANEL DE CONTROL IZQUIERDO (SIGIV STYLE) */
+        .no-print-panel { 
+            position: fixed; top: 0; left: 0; bottom: 0; width: 380px;
+            background: var(--glass); color: white; padding: 25px; 
+            box-shadow: 5px 0 25px rgba(0,0,0,0.7); overflow-y: auto; z-index: 1000;
+            border-right: 1px solid var(--ocre);
+            backdrop-filter: blur(15px);
+        }
+
+        .info-box { 
+            background: rgba(0,0,0,0.4); border: 2px solid var(--ocre); 
+            padding: 15px; border-radius: 12px; margin: 15px 0; text-align: center; 
+        }
+        .info-box span { font-size: 2.5rem; color: #2ecc71; font-weight: bold; text-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+        
+        #cloudStatus { font-size: 0.7rem; color: var(--ocre); margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+
+        .tabla-gestion { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
+        .tabla-gestion th, .tabla-gestion td { border: 1px solid rgba(176, 141, 92, 0.3); padding: 10px; text-align: center; }
+        .tabla-gestion th { background: rgba(0, 85, 150, 0.2); color: var(--ocre); font-size: 0.7rem; }
+        
+        .input-fecha-tabla { 
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
+            text-align: center; padding: 8px; border-radius: 5px; outline: none;
+        }
+        .input-fecha-tabla:focus { border-color: var(--ocre); }
+        .input-fecha-tabla:disabled { opacity: 0.4; cursor: not-allowed; border: none; }
+
+        .btn-ui { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; }
+        .btn-save { background: #27ae60; color: white; flex: 2; }
+        .btn-save:hover { background: #219150; transform: scale(1.02); }
+
+        /* HOJA OFICIAL A4 (RESTRICCIÓN: FORMATO INALTERABLE) */
+        .page {
+            width: 210mm; min-height: 297mm; padding: 15mm 20mm; margin: 20px auto 20px 420px;
+            background: white; color: black; box-sizing: border-box; border: 1px solid #000;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative;
+        }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo-escudo { width: 60px; margin-bottom: 5px; } 
+        .header .org { font-size: 9pt; font-weight: bold; letter-spacing: 2px; }
+        .header .dpv { font-size: 11pt; font-weight: bold; margin: 2px 0; }
+        .header .div-p { font-size: 10pt; text-decoration: underline; font-weight: bold; }
+        
+        .titulo-doc { text-align: center; font-size: 15pt; font-weight: bold; margin: 30px 0; letter-spacing: 1px; }
+
+        .tabla-header-datos { width: 100%; border-collapse: collapse; font-size: 10pt; }
+        .tabla-header-datos td { border: 1px solid #000; padding: 8px; height: 45px; vertical-align: top; }
+        .bg-yellow { background-color: #ffff00 !important; -webkit-print-color-adjust: exact; padding: 2px 4px; font-weight: bold; display: block; margin-top: 3px; }
+
+        .texto-cuerpo { font-size: 11.5pt; margin-top: 25px; line-height: 1.7; text-align: justify; }
+        .resaltado-fecha { font-weight: bold; text-decoration: underline; }
+
+        .informe-titulo { text-align: center; font-size: 14pt; font-weight: bold; margin: 40px 0 20px 0; letter-spacing: 8px; border-top: 1px solid #000; padding-top: 20px; }
+        .firma-block { margin-top: 20px; text-align: right; }
+        .linea-firma { border-top: 1px solid #000; width: 220px; display: inline-block; text-align: center; font-size: 8pt; padding-top: 3px; font-weight: bold; }
+
+        @media print {
+            .no-print-panel { display: none !important; }
+            body { background: white !important; }
+            .page { margin: 0; border: none; padding: 10mm; width: 100%; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print-panel">
+    <span id="cloudStatus">Sincronizando con SIGIV Cloud...</span>
+    <h2 style="color:var(--ocre); margin:0 0 5px 0;">GESTIÓN DE FRANCOS</h2>
+    <p style="font-size:0.75rem; color:#aaa; margin-bottom:20px;">Emisión de Solicitudes Oficiales D.P.V.</p>
+    
+    <label>1. SELECCIONAR AGENTE:</label>
+    <select id="selectAgente" onchange="cargarDatosAgente()" style="width:100%; padding:12px; margin: 8px 0 15px 0; background:#222; color:white; border:1px solid var(--ocre); border-radius: 8px;"></select>
+    
+    <div class="info-box">
+        <label style="font-size:0.7rem; color:#888; letter-spacing:1px;">SALDO DISPONIBLE</label><br>
+        <span id="saldoRestante">0</span>
+    </div>
+
+    <label>2. FILTRAR POR MES:</label>
+    <input type="month" id="pickerMes" onchange="actualizarTabla()" style="width:100%; padding:12px; margin:8px 0 15px 0; background:#222; color:white; border:1px solid #444; border-radius: 8px;">
+
+    <label>3. ASIGNAR FECHAS DE USO:</label>
+    <table class="tabla-gestion">
+        <thead>
+            <tr><th>ADQUIRIDO</th><th>USO (dd/mm/aaaa)</th></tr>
+        </thead>
+        <tbody id="filasGestion"></tbody>
+    </table>
+
+    <div style="display:flex; gap:10px; margin-top:25px;">
+        <button class="btn-ui" onclick="limpiarSeleccion()" style="flex:1; background:#444; color:white;">LIMPIAR</button>
+        <button id="btnGuardar" class="btn-ui btn-save" onclick="guardarYImprimir()">💾 GUARDAR E IMPRIMIR</button>
+    </div>
+    
+    <div style="margin-top: 25px; text-align: center;">
+        <a href="personal_inspeccion.html" style="color:var(--ocre); font-size: 0.85rem; text-decoration: none; font-weight: bold;">⬅ VOLVER AL MENÚ DE INSPECCIÓN</a>
+    </div>
+</div>
+
+<div class="page">
+    <div class="header">
+        <img src="Logo dpv.png" alt="Escudo DPV" class="logo-escudo">
+        <div class="org">PROVINCIA DE LA PAMPA</div>
+        <div class="dpv">DIRECCION PROVINCIAL DE VIALIDAD</div>
+        <div class="div-p">DIVISION PERSONAL</div>
+    </div>
+
+    <div class="titulo-doc">SOLICITUD DE FRANCO COMPENSATORIO</div>
+
+    <table class="tabla-header-datos">
+        <tr>
+            <td style="width: 40%;">APELLIDO Y NOMBRE:<br><span class="bg-yellow" id="outNombre"></span></td>
+            <td style="width: 20%;">AFILIADO:<br><span class="bg-yellow" id="outAfiliado"></span></td>
+            <td style="width: 40%;">DEPENDENCIA:<br><span style="font-size:7.5pt; font-weight:bold; display:block; margin-top:2px;">DIRECCION PRINCIPAL DE CONSTRUCCIONES Y RECONVERSION VIAL.</span></td>
+        </tr>
+    </table>
+
+    <div class="texto-cuerpo">
+        <strong>Señor Director Principal de Construcciones :</strong><br><br>
+        <div style="text-indent: 40px;">
+            Me dirijo a Ud. solicitándole quiera tener a bien disponer, que por donde corresponda se me otorgue el franco compensatorio correspondiente al año 2026 (Resolución Nº 8/90 Art. 41) 
+            <strong>el día :</strong> <span id="printUso" class="resaltado-fecha">.../.../...</span> 
+            por mayor horario trabajado <strong>durante el :</strong> <span id="printAdq" class="resaltado-fecha">.../.../...</span>.
+        </div>
+    </div>
+
+    <div class="texto-cuerpo">
+        Saludo a Ud. muy atentamente.-<br><br>
+        <strong>Santa Rosa</strong>, <span id="printFechaHoy"></span> ...................
+    </div>
+
+    <div class="firma-block"><div class="linea-firma">FIRMA DEL EMPLEADO</div></div>
+
+    <div class="informe-titulo">I N F O R M E</div>
+
+    <div class="texto-cuerpo">
+        <strong>Señor Director Principal de Construcciones :</strong><br>
+        <div style="text-indent: 40px;">
+            El empleado <strong id="outNombre2"></strong> quien desempeña tareas en La Dirección Principal de Construcciones solicita franco compensatorio estimando que se conceda, si corresponde.
+        </div>
+        <div class="firma-block"><div class="linea-firma">FIRMA DEL JEFE INMEDIATO</div></div>
+    </div>
+
+    <div class="texto-cuerpo">
+        <strong>Señor Ingeniero Jefe :</strong><br>
+        <div style="text-indent: 40px;">
+            A los fines pertinentes, elevo la solicitud de licencia que antecede opinando que, se conceda, si corresponde.
+        </div>
+        <div class="firma-block"><div class="linea-firma">FIRMA DIRECTOR PRINCIPAL</div></div>
+    </div>
+
+    <div class="texto-cuerpo" style="font-size: 13pt;"><strong>VISTO:</strong></div>
+    <div class="texto-cuerpo">
+        <div style="text-indent: 40px;">
+            Se eleva la presente a consideración del señor Presidente estimando que, de conformidad a los informes precedentes, se concede la licencia solicitada.
+        </div>
+        <div class="firma-block" style="margin-top:40px;"><div class="linea-firma">FIRMA DEL SEÑOR INGENIERO JEFE</div></div>
+    </div>
+</div>
+
+<script>
+    // Sincronización con bases de datos del sistema SIGIV
+    let dbAgentes = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
+    let dbViaticos = JSON.parse(localStorage.getItem('db_viaticos_fijos_data')) || {};
+
+    function inicializar() {
+        const select = document.getElementById('selectAgente');
+        dbAgentes.forEach((ag, i) => select.add(new Option(ag.nombre, i)));
+        
+        const hoy = new Date();
+        const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+        document.getElementById('printFechaHoy').innerText = hoy.toLocaleDateString('es-AR', opciones);
+        document.getElementById('pickerMes').value = hoy.toISOString().substring(0, 7);
+        
+        if(dbAgentes.length > 0) cargarDatosAgente();
+    }
+
+    function cargarDatosAgente() {
+        const idx = document.getElementById('selectAgente').value;
+        const agente = dbAgentes[idx];
+        if(!agente) return;
+        document.getElementById('outNombre').innerText = agente.nombre.toUpperCase();
+        document.getElementById('outNombre2').innerText = agente.nombre.toUpperCase();
+        document.getElementById('outAfiliado').innerText = agente.afiliado || '----';
+        actualizarTabla();
+    }
+
+    function aplicarMascaraFecha(input) {
+        let v = input.value.replace(/\D/g, '').slice(0, 8);
+        let final = "";
+        if (v.length > 0) final += v.slice(0, 2);
+        if (v.length > 2) final += '/' + v.slice(2, 4);
+        if (v.length > 4) final += '/' + v.slice(4, 8);
+        input.value = final;
+        sincronizarConHoja();
+    }
+
+    function actualizarTabla() {
+        const idx = document.getElementById('selectAgente').value;
+        const mesAnio = document.getElementById('pickerMes').value;
+        const tbody = document.getElementById('filasGestion');
+        tbody.innerHTML = "";
+        if(!mesAnio) return;
+
+        const [anio, mes] = mesAnio.split('-');
+        
+        // Buscamos francos en la base de datos sincronizada
+        // Se asume que en dbViaticos los francos se marcan con la clase 'dia-franco'
+        
+        const keyAgente1 = idx + "_" + mesAnio + "_1";
+        const keyAgente2 = idx + "_" + mesAnio + "_2";
+        
+        const procesarData = (data) => {
+            Object.keys(data).sort((a,b)=>a-b).forEach(dia => {
+                if (data[dia].c === 'dia-franco') {
+                    const tr = document.createElement('tr');
+                    const fechaUsoActual = data[dia].fecha_uso_real || '';
+                    const estaUsado = data[dia].usado_bloqueado === true;
+                    tr.innerHTML = `
+                        <td style="font-weight:bold;">${dia.padStart(2,'0')}/${mes}/${anio}</td>
+                        <td>
+                            <input type="text" class="input-fecha-tabla" 
+                                placeholder="dd/mm/aaaa"
+                                oninput="aplicarMascaraFecha(this)" 
+                                value="${fechaUsoActual}" 
+                                ${estaUsado ? 'disabled' : ''}>
+                        </td>`;
+                    tr.dataset.adq = `${dia.padStart(2,'0')}/${mes}/${anio}`;
+                    tr.dataset.diaOriginal = dia;
+                    tbody.appendChild(tr);
+                }
+            });
+        };
+
+        if(dbViaticos[keyAgente1]) procesarData(dbViaticos[keyAgente1]);
+        if(dbViaticos[keyAgente2]) procesarData(dbViaticos[keyAgente2]);
+
+        if(tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="2" style="color:gray; padding:20px;">Sin francos en este mes.</td></tr>`;
+        sincronizarConHoja();
+    }
+
+    function sincronizarConHoja() {
+        const listaAdq = [], listaUso = [];
+        document.querySelectorAll('#filasGestion tr').forEach(fila => {
+            const input = fila.querySelector('input');
+            if(input && input.value.length === 10 && !input.disabled) {
+                listaAdq.push(fila.dataset.adq);
+                listaUso.push(input.value);
+            }
+        });
+        document.getElementById('printUso').innerText = listaUso.length > 0 ? listaUso.join(' - ') : ".../.../...";
+        document.getElementById('printAdq').innerText = listaAdq.length > 0 ? listaAdq.join(' - ') : ".../.../...";
+        
+        const idx = document.getElementById('selectAgente').value;
+        let saldoTotal = 0;
+        for (let key in dbViaticos) {
+            if (key.startsWith(idx + "_")) {
+                for (let d in dbViaticos[key]) {
+                    if (dbViaticos[key][d].c === 'dia-franco' && !dbViaticos[key][d].usado_bloqueado) saldoTotal++;
+                }
+            }
+        }
+        document.getElementById('saldoRestante').innerText = Math.max(0, saldoTotal - listaUso.length);
+    }
+
+    function limpiarSeleccion() {
+        document.querySelectorAll('.input-fecha-tabla:not(:disabled)').forEach(i => i.value = "");
+        sincronizarConHoja();
+    }
+
+    function guardarYImprimir() {
+        const idx = document.getElementById('selectAgente').value;
+        const mesAnio = document.getElementById('pickerMes').value;
+        let cambios = false;
+
+        document.querySelectorAll('#filasGestion tr').forEach(fila => {
+            const input = fila.querySelector('input');
+            if(input && input.value.length === 10 && !input.disabled) {
+                const dia = fila.dataset.diaOriginal;
+                const quin = parseInt(dia) <= 15 ? "1" : "2";
+                const key = idx + "_" + mesAnio + "_" + quin;
+                
+                dbViaticos[key][dia].usado_bloqueado = true;
+                dbViaticos[key][dia].fecha_uso_real = input.value;
+                cambios = true;
+            }
+        });
+
+        if(!cambios) return alert("Ingrese fecha de USO completa.");
+        
+        localStorage.setItem('db_viaticos_fijos_data', JSON.stringify(dbViaticos));
+        actualizarTabla();
+        window.print();
+    }
+
+    window.onload = inicializar;
+</script>
+</body>
+</html>

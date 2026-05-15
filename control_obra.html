@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Control de Obra</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        .background {
+            background-image: url('fondo_control_obra.jpg');
+            background-size: cover; 
+            background-position: center; 
+            height: 100vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            width: 95%;
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+        }
+
+        h1 {
+            color: #ffd700;
+            font-weight: 800;
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .obra-tag {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Cuadrícula de Botones: 2 columnas */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Ajuste para celulares: 1 columna */
+        @media (max-width: 600px) {
+            .menu-grid { grid-template-columns: 1fr; }
+        }
+
+        .btn-menu {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            text-transform: uppercase;
+        }
+
+        .btn-menu:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffd700;
+            transform: scale(1.02);
+            color: #ffd700;
+        }
+
+        .btn-volver {
+            margin-top: 25px;
+            background: transparent;
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            font-weight: bold;
+            padding: 10px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .btn-volver:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="background">
+    <div class="glass-panel">
+        <h1>Control de Obra</h1>
+        <div id="obra-activa" class="obra-tag">Obra: Cargando...</div>
+
+        <div class="menu-grid">
+            <button class="btn-menu" onclick="window.location.href='topografia.html'">
+                📐 Topografía
+            </button>
+            <button class="btn-menu" onclick="window.location.href='laboratorio.html'">
+                🔬 Laboratorio
+            </button>
+            <button class="btn-menu" onclick="window.location.href='bacheo.html'">
+                🚧 Bacheo
+            </button>
+            <button class="btn-menu" onclick="window.location.href='senalamiento_vertical.html'">
+                🛑 Señalamiento Vertical
+            </button>
+            <button class="btn-menu" onclick="window.location.href='senalamiento_horizontal.html'">
+                🛣️ Señalamiento Horizontal
+            </button>
+            <button class="btn-menu" onclick="window.location.href='microaglomerado.html'">
+                🚜 Microaglomerado
+            </button>
+            <button class="btn-menu" onclick="window.location.href='alumbrado.html'">
+                💡 Alumbrado
+            </button>
+            <button class="btn-menu" onclick="window.location.href='mantenimiento.html'">
+                🧹 Mantenim. / Limpieza
+            </button>
+        </div>
+
+        <button class="btn-volver" onclick="window.location.href='panel_control.html'">
+            ⬅ Volver al Menú Principal
+        </button>
+    </div>
+
+    <div class="credits">S.I.G.I.V. - Módulo Operativo</div>
+</div>
+
+<script>
+    window.onload = function() {
+        const obraActual = sessionStorage.getItem('obraActual');
+        if (obraActual) {
+            document.getElementById('obra-activa').innerText = `Obra: ${obraActual}`;
+        } else {
+            window.location.href = 'obras.html';
+        }
+    };
+</script>
+
+</body>
+</html>

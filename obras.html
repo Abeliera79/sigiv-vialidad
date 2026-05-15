@@ -4,160 +4,224 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.I.G.I.V. - Selección de Obra</title>
-    <!-- Cargamos la librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
+            background-color: #1a1a1a;
         }
 
         .background {
             background-image: url('login.jpg');
-            background-size: cover; background-position: center; height: 100%;
-            display: flex; justify-content: center; align-items: center;
+            background-size: cover; 
+            background-position: center; 
+            height: 100vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
 
+        /* Recuadro con el formato original (Efecto Vidrio Oscuro) */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px; padding: 40px; width: 90%; max-width: 500px;
-            text-align: center; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        h2 { margin-top: 0; font-weight: 300; color: #e0e0e0; margin-bottom: 10px; }
-        
-        #user-welcome { font-size: 0.9rem; color: #9da4ad; margin-bottom: 30px; display: block; }
+        /* Títulos en Dorado/Blanco */
+        h2 { 
+            color: #ffd700; 
+            font-weight: 800; 
+            margin-top: 0; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
 
+        #user-welcome { 
+            font-size: 0.95rem; 
+            color: #e0e0e0; 
+            font-weight: 400;
+            margin-bottom: 30px; 
+            display: block; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        label { 
+            display: block; 
+            text-align: left; 
+            margin-bottom: 10px; 
+            font-size: 0.9rem; 
+            color: #ffd700; 
+            font-weight: bold;
+        }
+
+        /* Selector estilo oscuro */
         select {
-            width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px;
-            color: white; font-size: 1rem; margin-bottom: 20px; outline: none; cursor: pointer;
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            outline: none;
+            cursor: pointer;
         }
 
-        option { background: #2c3e50; color: white; }
+        option {
+            background: #2c3e50;
+            color: white;
+        }
 
+        /* Botón Ingresar (Gris/Plata degradado) */
         .btn-ingresar {
             background: linear-gradient(180deg, #9da4ad 0%, #5e6671 100%);
-            border: none; color: #1a2533; padding: 15px; width: 100%;
-            font-weight: bold; border-radius: 8px; cursor: pointer; margin-bottom: 15px; transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #1a2533;
+            padding: 15px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
         }
 
-        .btn-admin {
-            background: transparent; border: 1px dashed rgba(255, 255, 255, 0.4);
-            color: #fff; padding: 10px; width: 100%; border-radius: 8px;
-            cursor: pointer; font-size: 0.85rem; margin-bottom: 20px;
+        .btn-ingresar:hover {
+            filter: brightness(1.2);
+            transform: translateY(-2px);
         }
 
-        .btn-admin:hover { background: rgba(255, 255, 255, 0.1); }
-
-        #admin-section {
-            display: none; margin-top: 10px; padding: 15px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+        /* Botón Nueva Obra (Oscuro con letras doradas) */
+        .btn-nueva-obra-sigiv {
+            background: rgba(0, 0, 0, 0.4);
+            color: #ffd700;
+            border: 1px solid #ffd700;
+            padding: 12px 20px;
+            width: 100%;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
         }
 
-        input {
-            width: 80%; padding: 10px; background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 5px;
-            color: white; text-align: center; margin-bottom: 10px;
+        .btn-nueva-obra-sigiv:hover {
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         .btn-volver {
-            background: transparent; border: none; color: #aaa;
-            cursor: pointer; text-decoration: underline; margin-top: 15px;
+            background: transparent;
+            border: none;
+            color: #ff6b6b;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
         }
 
-        .credits { position: absolute; bottom: 20px; right: 30px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); }
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <div class="background">
-        <div class="glass-panel">
-            <h2>Selección de Obra</h2>
-            <span id="user-welcome">Cargando perfil...</span>
-            
-            <label style="display:block; text-align:left; margin-bottom:10px; font-size:0.9rem; color:#ccc;">Obras autorizadas para su usuario:</label>
-            <select id="obra-select">
-                <option value="0">-- Seleccione una obra --</option>
-            </select>
+<div class="background">
+    <div class="glass-panel">
+        <h2>Selección de Obra</h2>
+        <span id="user-welcome">Cargando perfil...</span>
+        
+        <label>Obras autorizadas para su usuario:</label>
+        <select id="obra-select">
+            <option value="0">-- Seleccione una obra --</option>
+        </select>
 
-            <button class="btn-ingresar" onclick="ingresarObra()">INGRESAR AL PANEL</button>
+        <button class="btn-ingresar" onclick="ingresarObra()">INGRESAR AL PANEL</button>
 
-            <button class="btn-admin" onclick="mostrarAdmin()">Gestionar Usuarios y Obras (Admin)</button>
+        <button class="btn-nueva-obra-sigiv" onclick="accesoNuevaObra()">
+            + NUEVA OBRA / EDITAR
+        </button>
 
-            <div id="admin-section">
-                <label style="display:block; margin-bottom:10px;">Contraseña de Seguridad:</label>
-                <input type="password" id="pass-admin" placeholder="••••••••">
-                <button class="btn-ingresar" style="padding:8px;" onclick="validarAdmin()">ACCEDER</button>
-            </div>
-
-            <br>
-            <button class="btn-volver" onclick="window.location.href='login.html'">CERRAR SESIÓN</button>
-        </div>
-
-        <div class="credits">By. Beliera Angel</div>
+        <button class="btn-volver" onclick="window.location.href='login.html'">CERRAR SESIÓN</button>
     </div>
 
-    <script>
-        const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
+    <div class="credits">By. Beliera Angel</div>
+</div>
 
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+    const SUPABASE_URL = 'https://rjkxxlloczgaggmltihd.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqa3h4bGxvY3pnYWdnbWx0aWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MzMzNzEsImV4cCI6MjA5NDMwOTM3MX0.bQ3M1Jd7tX84OMQnqnyzpwaqEY2SY2GV7DJSF_uue6E';
 
-        // Al cargar la página, verificamos quién entró
-        window.onload = function() {
-            const userData = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
-            
-            if (!userData) {
-                alert("Sesión no válida. Por favor, ingrese de nuevo.");
-                window.location.href = 'login.html';
-                return;
-            }
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            // Mostrar nombre y cargo
-            document.getElementById('user-welcome').innerText = `Agente: ${userData.nombre} (${userData.cargo})`;
-
-            // Cargar obras del usuario en el select
-            const select = document.getElementById('obra-select');
-            if (userData.obras) {
-                const listaObras = userData.obras.split(', ');
-                listaObras.forEach(obra => {
-                    const opt = document.createElement('option');
-                    opt.value = obra;
-                    opt.innerHTML = obra;
-                    select.appendChild(opt);
-                });
-            }
-        };
-
-        function ingresarObra() {
-            const obra = document.getElementById('obra-select').value;
-            if(obra == "0") {
-                alert("Por favor, seleccione una obra activa.");
-            } else {
-                // Guardamos la obra seleccionada para usarla en los formularios de laboratorio/inspección
-                sessionStorage.setItem('obraActual', obra);
-                alert(`Ingresando a: ${obra}`);
-                // window.location.href = 'panel_control.html'; // Próximo paso
-            }
+    window.onload = function() {
+        const userData = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        
+        if (!userData) {
+            window.location.href = 'login.html';
+            return;
         }
 
-        function mostrarAdmin() {
-            document.getElementById('admin-section').style.display = 'block';
-        }
+        document.getElementById('user-welcome').innerText = `Agente Vial: ${userData.nombre} (${userData.cargo})`;
 
-        function validarAdmin() {
-            const pass = document.getElementById('pass-admin').value;
-            if(pass === "3141592654") {
-                window.location.href = 'nuevo_usuario.html';
-            } else {
-                alert("Contraseña incorrecta.");
-            }
+        const select = document.getElementById('obra-select');
+        if (userData.obras) {
+            const listaObras = userData.obras.split(', ');
+            listaObras.forEach(obra => {
+                const opt = document.createElement('option');
+                opt.value = obra.trim();
+                opt.innerHTML = obra.trim();
+                select.appendChild(opt);
+            });
         }
-    </script>
+    };
+
+    function accesoNuevaObra() {
+        const claveMaestra = "3141592654";
+        const ingreso = prompt("ACCESO RESTRINGIDO\nIngrese la clave de Administrador para gestionar obras:");
+
+        if (ingreso === claveMaestra) {
+            window.location.href = 'nueva_obra.html';
+        } else if (ingreso !== null) {
+            alert("Clave incorrecta. Acceso denegado.");
+        }
+    }
+
+    function ingresarObra() {
+        const obra = document.getElementById('obra-select').value;
+        if(obra == "0" || obra === "") {
+            alert("Por favor, seleccione una obra activa de la lista.");
+        } else {
+            sessionStorage.setItem('obraActual', obra);
+            // Redirección activada al Menú Principal
+            window.location.href = 'panel_control.html';
+        }
+    }
+</script>
+
 </body>
 </html>

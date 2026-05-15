@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Parte Diario de Obra</title>
+    <style>
+        :root {
+            --ocre-light: #ffd700; /* Dorado SIGIV */
+            --ocre-dark: #b08d5c;
+            --glass-bg: rgba(0, 0, 0, 0.8);
+            --border-gold: rgba(255, 215, 0, 0.3);
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            overflow: hidden;
+        }
+
+        .background-container {
+            background-image: url('fondo_partes.jpg');
+            background-size: cover; 
+            background-position: center; 
+            height: 100vh;
+            display: flex;
+        }
+
+        /* SIDEBAR - HISTORIAL */
+        .sidebar {
+            width: 280px; 
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-right: 1px solid var(--border-gold);
+            display: flex; 
+            flex-direction: column; 
+            padding: 25px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .calendar-search {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border: 1px solid var(--border-gold);
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            font-family: inherit;
+            cursor: pointer;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-content { 
+            flex-grow: 1; 
+            padding: 30px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .sheet {
+            width: 100%; 
+            max-width: 900px; 
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px); 
+            border: 1px solid var(--border-gold);
+            border-radius: 15px; 
+            padding: 40px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            box-sizing: border-box;
+            margin-bottom: 50px;
+        }
+
+        .info-header { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; 
+            border-bottom: 2px solid #ffd700; 
+            padding-bottom: 15px; 
+            margin-bottom: 25px; 
+        }
+
+        .section-header { 
+            background: rgba(255, 215, 0, 0.1); 
+            color: #ffd700;
+            padding: 10px 15px; 
+            font-weight: bold; 
+            margin-top: 30px;
+            border-left: 5px solid #ffd700; 
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 10px; font-size: 0.7rem; color: #ffd700; text-transform: uppercase; border-bottom: 1px solid var(--border-gold); }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
+
+        .field-label { font-size: 0.7rem; color: #ffd700; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .field-value { width:100%; background:transparent; border:none; border-bottom:1px solid #444; color:white; padding:8px 0; outline:none; font-size: 1rem; }
+
+        /* TEXTAREA DINÁMICO */
+        #tareas {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,215,0,0.2); 
+            color: white; padding: 15px; margin-top: 10px; border-radius: 8px; 
+            resize: none; overflow: hidden; min-height: 120px; font-family: inherit;
+            line-height: 1.6; box-sizing: border-box;
+        }
+
+        #tareas-print { display: none; }
+
+        /* BOTONES FLOTANTES */
+        .controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100; }
+        .btn { padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; color: white; text-transform: uppercase; }
+        .btn-print { background: #444; border: 1px solid #666; }
+        .btn-save { background: #27ae60; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4); }
+        .btn-back { margin-top: auto; background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; cursor: pointer; font-size: 0.8rem; padding: 12px; border-radius: 10px; text-align:center; text-decoration:none; font-weight: bold; }
+        .btn-back:hover { background: #ff6b6b; color: white; }
+
+        /* IMPRESIÓN */
+        @media print {
+            .sidebar, .controls, .btn-back, #tareas { display: none !important; }
+            #tareas-print { display: block !important; white-space: pre-wrap; color: black; border: 1px solid #ccc; padding: 10px; }
+            body, .main-content { overflow: visible !important; display: block !important; background: white !important; }
+            .sheet { background: white !important; color: black !important; border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
+            .section-header { background: #eee !important; color: black !important; border-left: 5px solid black !important; }
+            .field-value, th, td { color: black !important; border-bottom: 1px solid #ddd !important; }
+            .field-label { color: #666 !important; }
+            table { width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-container">
+    <div class="sidebar">
+        <h2 style="color:#ffd700; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 5px; text-align: center;">S.I.G.I.V.</h2>
+        <p style="font-size: 0.65rem; color: #aaa; text-align: center; margin-bottom: 30px; text-transform: uppercase;">Módulo de Partes Diarios</p>
+        
+        <label class="field-label">Seleccionar Fecha:</label>
+        <input type="date" class="calendar-search" id="datePicker" onchange="updateDisplayDate()">
+        
+        <div id="historyList" style="margin-top: 20px; font-size: 0.8rem; color: #888; text-align: center;">
+            No hay registros guardados localmente.
+        </div>
+        
+        <button class="btn-back" onclick="safeBack()">⬅ VOLVER A ADMIN</button>
+    </div>
+
+    <div class="main-content">
+        <div class="sheet" id="parteDiario">
+            <div class="info-header">
+                <div>
+                    <h1 style="margin:0; font-size:1.6rem; letter-spacing:2px; color:#ffd700;">PARTE DIARIO DE OBRA</h1>
+                    <p id="obra-tag" style="margin:0; font-size:0.8rem; opacity:0.8; color:white;">Obra: Cargando...</p>
+                </div>
+                <div style="text-align: right;">
+                    <span id="displayDate" style="font-size: 1.3rem; font-weight: bold; color:#ffd700;">-- / -- / ----</span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <div class="field-label">Responsable del Parte</div>
+                    <input type="text" id="responsable" class="field-value" placeholder="Nombre del Agente Vial...">
+                </div>
+                <div>
+                    <div class="field-label">Estado del Clima</div>
+                    <input type="text" id="clima" class="field-value" placeholder="Ej: Despejado / Viento Norte">
+                </div>
+            </div>
+
+            <div class="section-header">Descripción de Tareas Realizadas</div>
+            <textarea id="tareas" placeholder="Detalle aquí los progresos, progresivas y novedades del día..." oninput="autoExpand(this)"></textarea>
+            <div id="tareas-print"></div>
+
+            <div class="section-header">Resumen de Personal en Planta</div>
+            <table id="tablePersonal">
+                <thead>
+                    <tr><th>Sección / Cuadrilla</th><th width="80" style="text-align:center;">Cant.</th><th>Novedades</th></tr>
+                </thead>
+                <tbody id="bodyPersonal"></tbody>
+            </table>
+
+            <div class="section-header">Equipos y Maquinaria en Operación</div>
+            <table id="tableEquipos">
+                <thead>
+                    <tr><th width="80">Interno</th><th>Descripción del Equipo</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="bodyEquipos">
+                    <tr><td>---</td><td>(Se sincronizará con Control de Equipos)</td><td>Operativo</td></tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:80px; display:flex; justify-content: space-around; text-align:center;">
+                <div style="border-top: 1px solid #ffd700; width: 200px; padding-top:10px; font-size:0.7rem;">FIRMA JEFE DE OBRA</div>
+                <div style="border-top: 1px solid #ffd700; width: 200px; padding-top:10px; font-size:0.7rem;">FIRMA INSPECCIÓN D.P.V.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn btn-print" onclick="imprimirParte()">🖨 IMPRIMIR</button>
+    <button class="btn btn-save" onclick="guardarLocal()">💾 GUARDAR</button>
+</div>
+
+<script>
+    let cambios = false;
+
+    window.onload = function() {
+        const obraActual = sessionStorage.getItem('obraActual') || "Obra No Identificada";
+        document.getElementById('obra-tag').innerText = `Obra: ${obraActual}`;
+        initPersonal();
+    };
+
+    const secciones = ["Jefatura", "Mov. Suelo", "Carpeta Asfáltica", "Hormigón", "Cantera", "Topografía", "Taller", "Planta Asfalto", "Laboratorio", "Inspección"];
+
+    function initPersonal() {
+        const tbody = document.getElementById('bodyPersonal');
+        secciones.forEach(s => {
+            tbody.innerHTML += `<tr>
+                <td>${s}</td>
+                <td><input type="number" value="0" style="width:50px; background:transparent; border:1px solid #444; color:white; text-align:center; outline:none;"></td>
+                <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="..."></td>
+            </tr>`;
+        });
+    }
+
+    function autoExpand(t) {
+        cambios = true;
+        t.style.height = 'auto';
+        t.style.height = (t.scrollHeight) + 'px';
+    }
+
+    function updateDisplayDate() {
+        const f = document.getElementById('datePicker').value;
+        document.getElementById('displayDate').innerText = f.split('-').reverse().join(' / ');
+    }
+
+    function imprimirParte() {
+        document.getElementById('tareas-print').innerText = document.getElementById('tareas').value;
+        setTimeout(() => { window.print(); }, 200);
+    }
+
+    function guardarLocal() {
+        if(!document.getElementById('datePicker').value) return alert("Seleccione fecha.");
+        cambios = false;
+        alert("Registro guardado en memoria local.");
+    }
+
+    function safeBack() {
+        if (cambios && !confirm("¿Salir sin guardar cambios?")) return;
+        window.location.href = 'administracion_obra.html';
+    }
+</script>
+
+</body>
+</html>

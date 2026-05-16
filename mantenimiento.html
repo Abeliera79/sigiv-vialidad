@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Control de Mantenimiento y Limpieza</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root { 
+            --bronze: #d4a373;
+            --bronze-dark: #a67c52;
+            --glass-bg: rgba(15, 23, 42, 0.55);
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body { 
+            background: #020617 url('fondo_mantenimiento.jpg') no-repeat center center fixed; 
+            background-size: cover; 
+            color: #f8fafc; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            overflow-x: hidden;
+        }
+
+        .planilla-container { 
+            max-width: 99%;
+            margin: 10px auto;
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--bronze-dark); 
+            border-radius: 12px;
+            padding: 22px;
+            position: relative;
+            min-height: 86vh;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn-cerrar-top {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(153, 27, 27, 0.8); color: white;
+            border: 1px solid #f87171; width: 35px; height: 35px;
+            border-radius: 4px; cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-cerrar-top:hover { background: #ef4444; }
+
+        .header-sigiv {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 2px solid var(--bronze-dark);
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+        h2 { color: var(--bronze); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.5rem; font-family: 'Playfair Display', serif; }
+
+        .btn-controles { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+
+        .btn-entrar {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--bronze); color: var(--bronze);
+            padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; 
+            text-transform: uppercase; font-size: 0.75rem; transition: 0.3s;
+        }
+        .btn-entrar:hover { background: var(--bronze); color: black; }
+        
+        .btn-entrar.active { background: var(--danger); color: white; border-color: var(--danger); }
+        .btn-agregar { background: rgba(16, 185, 129, 0.2); color: var(--success); border-color: var(--success); }
+        .btn-agregar:hover { background: var(--success); color: white; }
+        .btn-eliminar { background: rgba(239, 68, 68, 0.2); color: var(--danger); border-color: var(--danger); }
+        .btn-eliminar:hover { background: var(--danger); color: white; }
+
+        .table-wrapper {
+            flex-grow: 1; overflow-y: auto; margin-bottom: 15px;
+            border-radius: 6px; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
+        th {
+            background: rgba(166, 124, 82, 0.3); color: var(--bronze);
+            padding: 12px 6px; text-align: center; position: sticky; top: 0;
+            border-bottom: 2px solid var(--bronze-dark); z-index: 5;
+            text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;
+        }
+
+        td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: center; }
+
+        input, select, textarea {
+            background: rgba(0,0,0,0.5); border: 1px solid #475569;
+            color: white; width: 95%; padding: 6px; text-align: center;
+            border-radius: 4px; outline: none; font-size: 0.8rem; transition: 0.2s;
+            box-sizing: border-box;
+        }
+        textarea { text-align: left; resize: vertical; font-family: inherit; }
+
+        input:disabled, select:disabled, textarea:disabled {
+            background: transparent !important; border: 1px solid transparent !important; 
+            color: #f1f5f9 !important; cursor: default; appearance: none;
+        }
+
+        select option {
+            background-color: white !important;
+            color: black !important;
+        }
+
+        .ojo {
+            background: rgba(166, 124, 82, 0.2); border: 1px solid var(--bronze);
+            color: var(--bronze); cursor: pointer; padding: 3px 8px; margin-bottom: 4px;
+            border-radius: 4px; display: none; font-size: 0.9rem; transition: 0.2s;
+        }
+        .ojo:hover { background: var(--bronze); color: black; }
+
+        .btn-back {
+            background: transparent; border: 1px solid #64748b; color: #cbd5e1;
+            padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; font-size: 0.8rem; transition: 0.3s;
+        }
+        .btn-back:hover { background: #64748b; color: white; }
+
+        @media print {
+            .btn-controles, .btn-back, .btn-cerrar-top, th:first-child, td:first-child { display: none !important; }
+            .planilla-container { background: white; color: black; border: none; width: 100%; height: auto; }
+            h2, th { color: black; border-bottom: 2px solid black; }
+            input, select, textarea { color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="planilla-container">
+    <button class="btn-cerrar-top" onclick="salirSistema()">×</button>
+    
+    <div class="header-sigiv">
+        <div>
+            <h2>Mantenimiento y Limpieza de Zona del Camino</h2>
+            <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px; letter-spacing: 1px;">S.I.G.I.V. | GESTIÓN OPERATIVA</div>
+        </div>
+        <div style="font-size: 0.8rem; font-weight: bold; color: var(--bronze);">
+            MODO: <span id="txtModo">LECTURA</span>
+        </div>
+    </div>
+
+    <div class="btn-controles">
+        <button class="btn-entrar" id="btnModo" onclick="toggleEdit()">Editar</button>
+        <button class="btn-entrar btn-agregar" id="btnAgregar" style="display:none" onclick="agregarFila()">+ Agregar Registro</button>
+        <button class="btn-entrar btn-eliminar" id="btnEliminar" style="display:none" onclick="borrarSeleccion()">🗑️ Eliminar</button>
+        <button class="btn-entrar" style="margin-left: auto; background: rgba(30, 41, 59, 0.8);" onclick="window.print()">Imprimir</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th width="45">Sel.</th>
+                    <th width="125">Fecha / Hora</th>
+                    <th width="140">Tramo / Progresiva</th>
+                    <th width="180">Actividad realizada</th>
+                    <th>Detalle / Ubicación</th>
+                    <th width="140">Estado</th>
+                    <th width="150">Documentación / Adjunto</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <button class="btn-back" onclick="volverAlMenu()">⬅ VOLVER AL PANEL DE OBRA</button>
+    </div>
+</div>
+
+<script>
+    let modoEdit = false;
+    let cambios = false;
+    let idActual = 0;
+    let archivosCargados = {}; // Repositorio en memoria real para archivos adjuntos
+
+    function toggleEdit() {
+        modoEdit = !modoEdit;
+        const btn = document.getElementById('btnModo');
+        const btnAdd = document.getElementById('btnAgregar');
+        const btnDel = document.getElementById('btnEliminar');
+        const txt = document.getElementById('txtModo');
+        
+        btn.innerText = modoEdit ? "Bloquear / Guardar" : "Editar";
+        btn.classList.toggle('active');
+        
+        btnAdd.style.display = modoEdit ? "inline-block" : "none";
+        btnDel.style.display = modoEdit ? "inline-block" : "none";
+        
+        txt.innerText = modoEdit ? "EDICIÓN ACTIVA" : "LECTURA";
+        txt.style.color = modoEdit ? "#f87171" : "var(--bronze)";
+
+        document.querySelectorAll('input, select, textarea').forEach(i => i.disabled = !modoEdit);
+    }
+
+    function agregarFila() {
+        idActual++;
+        const tbody = document.getElementById('cuerpoTabla');
+        const tr = document.createElement('tr');
+        tr.dataset.id = idActual;
+        
+        tr.innerHTML = `
+            <td><input type="checkbox" class="ch" style="width:18px; height:18px;"></td>
+            <td><input type="datetime-local" value="${new Date().toISOString().slice(0,16)}" onchange="marcar()"></td>
+            <td><input type="text" placeholder="Ej: Km 12 a Km 18" oninput="marcar()"></td>
+            <td>
+                <select onchange="marcar()">
+                    <option value="Corte de Pasto">Corte de Pasto / Malezas</option>
+                    <option value="Limpieza de Alcantarillas">Limpieza de Alcantarillas</option>
+                    <option value="Recolección de Residuos">Recolección de Residuos</option>
+                    <option value="Despeje de Banquinas">Despeje de Banquinas</option>
+                    <option value="Otro">Otro Ensayo / Mantenimiento</option>
+                </select>
+            </td>
+            <td><textarea rows="2" placeholder="Notas e indicaciones particulares..." oninput="marcar()"></textarea></td>
+            <td>
+                <select onchange="colorearEstado(this)">
+                    <option value="Completado">Completado</option>
+                    <option value="En Proceso">En Proceso</option>
+                    <option value="Demorado">Demorado</option>
+                </select>
+            </td>
+            <td>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                    <button class="ojo" onclick="verDocumento(${idActual})">👁️ Ver Doc</button>
+                    <input type="file" accept=".pdf, .png, .jpg, .jpeg, .xlsx" style="font-size:0.65rem; width:110px;" onchange="cargarArchivo(this, ${idActual})">
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+        colorearEstado(tr.querySelectorAll('select')[1]);
+        marcar();
+        
+        if(!modoEdit) {
+            tr.querySelectorAll('input, select, textarea').forEach(i => i.disabled = true);
+        }
+    }
+
+    function marcar() { 
+        if(modoEdit) cambios = true; 
+    }
+
+    function colorearEstado(sel) {
+        if(sel.value === "Completado") {
+            sel.style.color = "#4ade80";
+            sel.style.fontWeight = "bold";
+        } else if(sel.value === "En Proceso") {
+            sel.style.color = "#fbbf24";
+            sel.style.fontWeight = "bold";
+        } else {
+            sel.style.color = "#f87171";
+            sel.style.fontWeight = "bold";
+        }
+        marcar();
+    }
+
+    // CARGA REAL DE ARCHIVO EN MEMORIA
+    function cargarArchivo(input, id) {
+        const btnOjo = input.closest('td').querySelector('.ojo');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) { 
+                archivosCargados[id] = {
+                    src: e.target.result,
+                    name: input.files[0].name,
+                    type: input.files[0].type
+                }; 
+                btnOjo.style.display = "block";
+                marcar();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // VISUALIZADOR REAL DE ADJUNTOS EN PESTAÑA LIMPIA
+    function verDocumento(id) {
+        if (archivosCargados[id]) {
+            const fileData = archivosCargados[id];
+            const win = window.open("");
+            if (fileData.type.startsWith('image/')) {
+                win.document.write(`<title>${fileData.name}</title><body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh;"><img src="${fileData.src}" style="max-width:100%; max-height:100%; box-shadow:0 0 20px rgba(0,0,0,0.8);"></body>`);
+            } else {
+                win.document.write(`<title>${fileData.name}</title><body style="margin:0; height:100vh;"><iframe src="${fileData.src}" frameborder="0" style="width:100%; height:100%;" allowfullscreen></iframe></body>`);
+            }
+        } else {
+            alert("No hay documento adjunto válido.");
+        }
+    }
+
+    function borrarSeleccion() {
+        if (!modoEdit) return;
+        const cs = document.querySelectorAll(".ch:checked");
+        if(cs.length === 0) return alert("Seleccione registros mediante la casilla 'Sel.' para eliminar.");
+        
+        if(confirm(`¿Desea eliminar los ${cs.length} registros seleccionados?`)) {
+            cs.forEach(c => {
+                const id = c.closest("tr").dataset.id;
+                delete archivosCargados[id]; // Limpia la memoria del archivo
+                c.closest("tr").remove();
+            });
+            cambios = true;
+        }
+    }
+
+    function salirSistema() { 
+        if(confirm("¿Cerrar acceso al S.I.G.I.V.?")) window.location.href = 'index.html'; 
+    }
+
+    function volverAlMenu() {
+        if (modoEdit && cambios) {
+            if (!confirm("Tiene modificaciones activas sin bloquear. ¿Desea regresar de todos modos?")) return;
+        }
+        window.location.href = 'control_obra.html';
+    }
+
+    window.onload = () => {
+        agregarFila(); // Inserta fila inicial por defecto
+        toggleEdit(); toggleEdit(); // Forzar modo lectura estricto al inicio
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>S.I.G.I.V. - Control de Laboratorio</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('fondo_laboratorio.jpg') !important;
+        }
+        
+        .planilla-container {
+            max-width: 98%;
+            margin: 15px auto;
+            background: rgba(15, 23, 42, 0.65); 
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--bronze-dark);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            min-height: 85vh;
+        }
+
+        .btn-cerrar-top {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(153, 27, 27, 0.8); color: white;
+            border: 1px solid #f87171; width: 35px; height: 35px;
+            border-radius: 4px; cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        
+        th { 
+            background: rgba(166, 124, 82, 0.3); color: var(--bronze); 
+            padding: 10px 5px; font-size: 0.7rem; text-transform: uppercase;
+            border: 1px solid rgba(166, 124, 82, 0.4);
+        }
+
+        .col-sel { width: 40px; }
+        .col-fecha { width: 130px; }
+        .col-tipo { width: 160px; }
+        .col-desc { width: 25%; } 
+        .col-estado { width: 120px; }
+        .col-obs { width: 25%; } 
+        .col-adj { width: 150px; }
+
+        td { border: 1px solid rgba(255,255,255,0.1); padding: 5px; text-align: center; }
+
+        input, textarea, select {
+            background: rgba(0,0,0,0.5); border: 1px solid #475569;
+            color: white; width: 100%; padding: 8px 4px;
+            border-radius: 3px; font-size: 0.8rem;
+        }
+
+        input:disabled, textarea:disabled, select:disabled {
+            background: transparent; border: none; color: #f1f5f9; cursor: default; appearance: none;
+        }
+
+        select option {
+            background-color: white !important;
+            color: black !important;
+        }
+
+        .btn-ojo {
+            background: rgba(166, 124, 82, 0.2); border: 1px solid var(--bronze);
+            color: var(--bronze); cursor: pointer; padding: 2px 8px;
+            border-radius: 4px; display: none; font-size: 1rem;
+        }
+
+        .btn-controles { display: flex; gap: 10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="planilla-container">
+    <button class="btn-cerrar-top" onclick="salirSistema()">×</button>
+    
+    <div style="border-bottom: 2px solid var(--bronze); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h2 style="color: var(--bronze); margin: 0; font-family: 'Playfair Display', serif;">CONTROL DE LABORATORIO</h2>
+            <p style="color: #94a3b8; font-size: 0.7rem; margin: 5px 0 10px 0;">S.I.G.I.V. - ENSAYOS DE MATERIALES Y SUELOS</p>
+        </div>
+        <div style="color: var(--bronze); font-size: 0.7rem; margin-bottom: 10px; opacity: 0.8;">
+            MODO: <span id="indicadorModo">LECTURA</span>
+        </div>
+    </div>
+
+    <div class="btn-controles">
+        <button id="btnEditar" class="btn-entrar" style="width: auto; padding: 0 25px;" onclick="toggleEditar()">EDITAR</button>
+        <button id="btnAgregar" class="btn-entrar" style="width: auto; padding: 0 25px; display: none;" onclick="agregarFila()">AGREGAR FILA</button>
+        <button class="btn-entrar" style="width: auto; padding: 0 25px; background: rgba(127, 29, 29, 0.8);" onclick="eliminarFilas()">ELIMINAR</button>
+        <button class="btn-entrar" style="width: auto; padding: 0 25px; background: rgba(30, 41, 59, 0.8);" onclick="imprimirPlanilla()">IMPRIMIR</button>
+    </div>
+
+    <table id="tablaLabo">
+        <thead>
+            <tr>
+                <th class="col-sel">Sel.</th>
+                <th class="col-fecha">Fecha</th>
+                <th class="col-tipo">Tipo de Ensayo</th>
+                <th class="col-desc">Descripción</th>
+                <th class="col-estado">Estado</th>
+                <th class="col-obs">Observaciones</th>
+                <th class="col-adj">Adj. Ensayo</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 30px;">
+        <button class="btn-entrar" style="width: 150px; background: transparent; border: 1px solid #64748b;" onclick="confirmarVolver()">VOLVER</button>
+    </div>
+</div>
+
+<script>
+    let modoEdicion = false;
+    let datosModificados = false;
+
+    function toggleEditar() {
+        modoEdicion = !modoEdicion;
+        const btn = document.getElementById('btnEditar');
+        const btnAdd = document.getElementById('btnAgregar');
+        const ind = document.getElementById('indicadorModo');
+        const inputs = document.querySelectorAll('input, textarea, select');
+
+        if(modoEdicion) {
+            btn.innerText = "BLOQUEAR / GUARDAR";
+            ind.innerText = "EDICIÓN ACTIVA";
+            ind.style.color = "#f87171";
+            btnAdd.style.display = "block";
+            inputs.forEach(i => i.disabled = false);
+        } else {
+            btn.innerText = "EDITAR";
+            ind.innerText = "LECTURA";
+            ind.style.color = "var(--bronze)";
+            btnAdd.style.display = "none";
+            inputs.forEach(i => i.disabled = true);
+        }
+    }
+
+    function agregarFila() {
+        const tbody = document.querySelector('#tablaLabo tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="row-sel" style="width: 18px; height: 18px;"></td>
+            <td><input type="date" value="${new Date().toISOString().split('T')[0]}"></td>
+            <td><input type="text" placeholder="Ej: Proctor, Marshall..."></td>
+            <td><textarea rows="2" placeholder="Detalle de progresivas, capa y material..."></textarea></td>
+            <td>
+                <select onchange="colorearEstado(this)">
+                    <option value="C.E.T">C.E.T</option>
+                    <option value="No C.E.T.">No C.E.T.</option>
+                    <option value="C. Parcial">C. Parcial</option>
+                </select>
+            </td>
+            <td><textarea rows="2" placeholder="Notas adicionales..."></textarea></td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 5px; flex-direction: column;">
+                    <input type="file" accept=".pdf, .xlsx, .xls" onchange="gestionarAdjunto(this)" style="font-size: 0.6rem;">
+                    <button class="btn-ojo" onclick="abrirArchivo(this)">👁️ Ver Doc</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        datosModificados = true;
+        if(!modoEdicion) {
+            tr.querySelectorAll('input, textarea, select').forEach(i => i.disabled = true);
+        }
+    }
+
+    // FUNCIÓN CORREGIDA: Crea un enlace real en memoria para el archivo adjunto
+    function gestionarAdjunto(input) {
+        const btnOjo = input.nextElementSibling;
+        if(input.files && input.files[0]) {
+            btnOjo.style.display = "block";
+            // Genera una URL temporal real del archivo cargado localmente
+            const fileURL = URL.createObjectURL(input.files[0]);
+            btnOjo.dataset.file = fileURL;
+        }
+        datosModificados = true;
+    }
+
+    // FUNCIÓN CORREGIDA: Abre el archivo directamente en una pestaña nueva limpia
+    function abrirArchivo(btn) {
+        if (btn.dataset.file) {
+            window.open(btn.dataset.file, '_blank');
+        } else {
+            alert("No se ha cargado ningún archivo válido.");
+        }
+    }
+
+    function colorearEstado(sel) {
+        if(sel.value === "No C.E.T.") sel.style.color = "#f87171";
+        else if(sel.value === "C.E.T") sel.style.color = "#4ade80";
+        else sel.style.color = "#fbbf24";
+        datosModificados = true;
+    }
+
+    function eliminarFilas() {
+        const sel = document.querySelectorAll('.row-sel:checked');
+        if(sel.length === 0) return alert("Seleccione filas para eliminar.");
+        if(confirm(`¿Eliminar ${sel.length} registros de laboratorio?`)) {
+            sel.forEach(cb => cb.closest('tr').remove());
+            datosModificados = true;
+        }
+    }
+
+    function imprimirPlanilla() { window.print(); }
+    function salirSistema() { if(confirm("¿Cerrar S.I.G.I.V.?")) window.location.href = 'index.html'; }
+
+    function confirmarVolver() {
+        if(datosModificados) {
+            const res = confirm("¿Desea guardar los ensayos registrados antes de volver?");
+            if(res) alert("Base de datos de Laboratorio actualizada.");
+        }
+        window.location.href = 'control_obra.html';
+    }
+
+    window.onload = () => {
+        agregarFila();
+        toggleEditar(); toggleEditar(); // Forzar modo lectura inicial
+    }
+</script>
+
+</body>
+</html>

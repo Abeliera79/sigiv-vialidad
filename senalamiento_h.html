@@ -41,11 +41,12 @@
             font-weight: bold;
             text-transform: uppercase;
             font-size: 0.75rem;
+            transition: all 0.3s ease;
         }
 
-        button.active { background: var(--bronze); color: white; }
+        button.active { background: #28a745; border-color: #28a745; color: white; } /* Verde para cuando dice GUARDAR */
 
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 1420px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
         th {
             background: rgba(166, 124, 82, 0.8);
@@ -55,22 +56,19 @@
             border: 1px solid var(--border);
         }
 
-        /* ANCHOS ULTRA OPTIMIZADOS PARA LENTITUD Y COMPACTACIÓN */
+        /* ANCHOS CONTROLADOS PARA EVITAR DEFORMACIONES */
         .col-sel { width: 35px; }
         .col-fecha { width: 115px; }
         .col-prog { width: 70px; }
         .col-long { width: 70px; background: rgba(166, 124, 82, 0.1); }
         .col-tipo { width: 110px; }
         .col-det { width: 175px; }
-
-        /* MEDIDAS REDUCIDAS SOLICITADAS: */
-        .col-lin { width: 65px; }    /* Espacio compacto para "Simple" / "Doble" */
+        .col-lin { width: 65px; }
         .col-mat { width: 140px; }
-        .col-pin { width: 105px; }   /* Espacio compacto para "Termoplastica" */
-        .col-col { width: 80px; }    /* Espacio compacto para "Amarillo" o "Blanco" */
+        .col-pin { width: 105px; }
+        .col-col { width: 80px; }
         .col-ref { width: 130px; }
-        .col-est { width: 95px; }    /* Espacio compacto para "Observacion" */
-
+        .col-est { width: 95px; }
         .col-img { width: 90px; }
 
         td { border: 1px solid var(--border); padding: 2px; }
@@ -80,7 +78,7 @@
             background: rgba(0,0,0,0.3);
             border: none;
             color: white;
-            font-size: 0.72rem; /* Tipografía reducida para evitar saltos de línea */
+            font-size: 0.72rem;
             padding: 5px 2px;
             box-sizing: border-box;
         }
@@ -134,13 +132,6 @@
     let cambiosSinGuardar = false;
     const imagenesCargadas = {}; 
 
-    // Bloquear controles inicialmente
-    window.onload = function() {
-        if(!editando) {
-            document.querySelectorAll('input, select').forEach(el => el.disabled = true);
-        }
-    };
-
     window.addEventListener('beforeunload', function (e) {
         if (cambiosSinGuardar) {
             e.preventDefault();
@@ -151,17 +142,73 @@
     function registrarCambio() { cambiosSinGuardar = true; }
 
     function toggleEdicion() {
-        editando = !editando;
         const btn = document.getElementById('btnEditar');
-        btn.classList.toggle('active', editando);
-        btn.innerText = editando ? "MODO EDICIÓN ON" : "EDITAR";
+        
+        if (editando) {
+            // SI ESTABA EDITANDO Y SE PRESIONA, SE EJECUTA EL GUARDADO
+            guardarDatosCSV();
+            editando = false;
+            btn.classList.remove('active');
+            btn.innerText = "EDITAR";
+        } else {
+            // SI NO ESTABA EDITANDO, ACTIVA EL MODO EDICIÓN
+            editando = true;
+            btn.classList.add('active');
+            btn.innerText = "GUARDAR CAMBIOS";
+        }
 
+        // Bloquear o desbloquear elementos según corresponda
         document.querySelectorAll('input, select').forEach(el => {
             if(!el.classList.contains('col-long-input')) el.disabled = !editando;
         });
 
         document.querySelectorAll('.ojito').forEach(o => o.style.display = editando ? 'none' : 'inline-block');
         document.querySelectorAll('.adjunto-btn').forEach(a => a.style.display = editando ? 'inline-block' : 'none');
+    }
+
+    function guardarDatosCSV() {
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        if(filas.length === 0) {
+            alert("No hay datos para guardar.");
+            cambiosSinGuardar = false;
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        // Encabezados del Excel
+        csvContent += "Fecha,Prog_Ini,Prog_Fin,Longitud,Tipo,Detalle,N_Lineas,Material,Pintura,Color,Microprisma,Reflexion,Estado\n";
+
+        filas.forEach(fila => {
+            const inputs = fila.querySelectorAll('input, select');
+            // Recolectamos los valores omitiendo el checkbox (0) y el archivo de imagen (último)
+            const fecha = inputs[1].value;
+            const ini = inputs[2].value;
+            const fin = inputs[3].value;
+            const long = inputs[4].value;
+            const tipo = inputs[5].value;
+            const det = inputs[6].value;
+            const lin = inputs[7].value;
+            const mat = inputs[8].value;
+            const pin = inputs[9].value;
+            const col = inputs[10].value;
+            const ref1 = inputs[11].value;
+            const ref2 = inputs[12].value;
+            const est = inputs[13].value;
+
+            csvContent += `"${fecha}","${ini}","${fin}","${long}","${tipo}","${det}","${lin}","${mat}","${pin}","${col}","${ref1}","${ref2}","${est}"\n`;
+        });
+
+        // Generar descarga automática
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "registro_señalamiento_horizontal.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        cambiosSinGuardar = false; // Ya está salvado
+        alert("¡Datos guardados y descargados exitosamente como reporte Excel/CSV!");
     }
 
     function calcularLongitud(id) {
@@ -196,7 +243,6 @@
         const id = Date.now();
         const fila = document.createElement('tr');
         
-        // CORRECCIÓN CLAVE: Se inyectan las clases CSS en cada TD para heredar los anchos compactos fijados arriba
         fila.innerHTML = '=== TR INICIO ===' +
             '<td class="col-sel"><input type="checkbox" class="sel-check"></td>' +
             '<td class="col-fecha"><input type="date" onchange="registrarCambio()"></td>' +
@@ -233,7 +279,6 @@
             '</td>';
             
         fila.innerHTML = fila.innerHTML.replace('=== TR INICIO ===', '');
-        
         document.getElementById('tablaCuerpo').appendChild(fila);
         registrarCambio();
     }

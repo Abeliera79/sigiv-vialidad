@@ -147,6 +147,11 @@
             <button class="btn-menu" onclick="window.location.href='microaglomerado.html'">
                 🚜 Microaglomerado
             </button>
+            
+            <button class="btn-menu" onclick="window.location.href='riego.html'">
+                💧 Riego Imprimación/Liga
+            </button>
+
             <button class="btn-menu" onclick="window.location.href='alumbrado.html'">
                 💡 Alumbrado
             </button>
@@ -169,7 +174,7 @@
         if (obraActual) {
             document.getElementById('obra-activa').innerText = `Obra: ${obraActual}`;
         } else {
-            window.location.href = 'obras.html';
+            document.getElementById('obra-activa').innerText = `Obra: No especificada`;
         }
     };
 </script>

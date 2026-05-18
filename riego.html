@@ -70,7 +70,7 @@
             border: 1px solid var(--border);
         }
 
-        /* ANCHOS TOTALMENTE CONTROLADOS PARA EVITAR DEFORMACIONES */
+        /* ANCHOS CONTROLADOS PARA EVITAR DEFORMACIONES */
         .col-sel { width: 40px; }
         .col-fecha { width: 125px; }
         .col-dato { width: 85px; } 
@@ -95,6 +95,17 @@
         }
 
         .calc-res { font-size: 0.75rem; font-weight: bold; color: #ffd700; }
+
+        /* Optimización de estilos para cuando guardás como PDF / Imprimís */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .planilla-container { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            .menu-bar, .btn-cerrar-top, .col-sel, td:first-child, style, script, button { display: none !important; }
+            th { background: #e2e8f0 !important; color: black !important; border: 1px solid #cbd5e1 !important; }
+            td { color: black !important; border: 1px solid #cbd5e1 !important; }
+            input, textarea { color: black !important; background: transparent !important; }
+            .calc-res { color: black !important; }
+        }
     </style>
 </head>
 <body>
@@ -116,7 +127,7 @@
         <button id="btnEditar" class="btn-act" onclick="toggleEdicion()">Editar</button>
         <button id="btnAgregar" class="btn-act" style="display: none;" onclick="agregarFila()">Agregar Fila</button>
         <button class="btn-act" style="background: rgba(127, 29, 29, 0.6); border-color: #f87171; color: #f87171;" onclick="eliminarFilas()">Eliminar</button>
-        <button class="btn-act" onclick="imprimirPlanilla()">Imprimir</button>
+        <button class="btn-act" onclick="imprimirPlanilla()">Imprimir / PDF</button>
     </div>
 
     <div style="overflow-x: auto;">
@@ -150,7 +161,11 @@
     let editando = false;
     let cambiosSinGuardar = false;
 
-    // Bloqueo de salida por seguridad
+    // Recupera la información retenida apenas abre la planilla
+    window.onload = function() {
+        cargarDatosGuardados();
+    };
+
     window.addEventListener('beforeunload', function (e) {
         if (cambiosSinGuardar) {
             e.preventDefault();
@@ -166,8 +181,8 @@
         const ind = document.getElementById('indicadorModo');
         
         if (editando) {
-            // EJECUTA ACCIÓN DE GUARDADO AUTOMÁTICO EXCEL/CSV
-            guardarDatosCSV();
+            // GUARDA EXCLUSIVAMENTE EN LA INTERFAZ / MEMORIA INTERNA
+            guardarDatosInternos();
             editando = false;
             btn.classList.remove('active');
             btn.innerText = "EDITAR";
@@ -175,7 +190,6 @@
             ind.style.color = "#ffd700";
             btnAdd.style.display = "none";
         } else {
-            // ENTRA EN MODO EDICIÓN
             editando = true;
             btn.classList.add('active');
             btn.innerText = "GUARDAR CAMBIOS";
@@ -184,51 +198,72 @@
             btnAdd.style.display = "inline-block";
         }
 
-        // Habilitar o deshabilitar campos de texto interactivos
         document.querySelectorAll('#tablaRiego input, #tablaRiego textarea').forEach(el => {
             el.disabled = !editando;
         });
     }
 
-    function guardarDatosCSV() {
+    // Almacena localmente los datos dentro de la estructura de la aplicación
+    function guardarDatosInternos() {
         const filas = document.querySelectorAll('#tablaRiego tbody tr');
-        if(filas.length === 0) {
-            alert("No hay datos para guardar.");
-            cambiosSinGuardar = false;
-            return;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-        // Encabezados del CSV estructurados
-        csvContent += "Fecha,Prog_Ini,Prog_Fin,Metros_Lin,Ancho_m,M2,Lect_Ini,Lect_Fin,Litros_Tot,Ltrs_M2,Observacion\n";
+        let listaDatos = [];
 
         filas.forEach(fila => {
-            const fecha = fila.querySelector('.v-fecha').value;
-            const pini = fila.querySelector('.v-pini').value;
-            const pfin = fila.querySelector('.v-pfin').value;
-            const ml = fila.querySelector('.v-ml').innerText;
-            const ancho = fila.querySelector('.v-ancho').value;
-            const m2 = fila.querySelector('.v-m2').innerText;
-            const lini = fila.querySelector('.v-lini').value;
-            const lfin = fila.querySelector('.v-lfin').value;
-            const ltot = fila.querySelector('.v-ltot').innerText;
-            const dosif = fila.querySelector('.v-dosif').innerText;
-            const obs = fila.querySelector('.v-obs-text').value.replace(/"/g, '""'); // Escapar comillas
-
-            csvContent += `"${fecha}","${pini}","${pfin}","${ml}","${ancho}","${m2}","${lini}","${lfin}","${ltot}","${dosif}","${obs}"\n`;
+            let registro = {
+                fecha: fila.querySelector('.v-fecha').value,
+                pini: fila.querySelector('.v-pini').value,
+                pfin: fila.querySelector('.v-pfin').value,
+                ancho: fila.querySelector('.v-ancho').value,
+                lini: fila.querySelector('.v-lini').value,
+                lfin: fila.querySelector('.v-lfin').value,
+                obs: fila.querySelector('.v-obs-text').value
+            };
+            listaDatos.push(registro);
         });
 
-        // Crear enlace de descarga veloz
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "registro_riego_imprimacion_liga.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
+        localStorage.setItem('datosPlanillaRiego', JSON.stringify(listaDatos));
         cambiosSinGuardar = false; 
-        alert("¡Planilla de Riego guardada y descargada exitosamente en formato Excel/CSV!");
+        alert("¡Cambios almacenados correctamente dentro de la planilla!");
+    }
+
+    // Reestablece las filas de datos que fueron guardadas previamente
+    function cargarDatosGuardados() {
+        const datosAlmacenados = localStorage.getItem('datosPlanillaRiego');
+        if (!datosAlmacenados) return;
+
+        const listaDatos = JSON.parse(datosAlmacenados);
+        const tbody = document.querySelector('#tablaRiego tbody');
+        tbody.innerHTML = ""; 
+
+        listaDatos.forEach(reg => {
+            const tr = document.createElement('tr');
+            
+            const pini = parseFloat(reg.pini) || 0;
+            const pfin = parseFloat(reg.pfin) || 0;
+            const ml = Math.abs(pfin - pini);
+            const ancho = parseFloat(reg.ancho) || 0;
+            const m2 = ml * ancho;
+            const lini = parseFloat(reg.lini) || 0;
+            const lfin = parseFloat(reg.lfin) || 0;
+            const ltot = Math.abs(lini - lfin);
+            const dosif = m2 > 0 ? ltot / m2 : 0;
+
+            tr.innerHTML = `
+                <td class="col-sel"><input type="checkbox" class="row-sel" style="transform: scale(1.1);"></td>
+                <td class="col-fecha"><input type="date" class="v-fecha" value="${reg.fecha}" onchange="registrarCambio()" disabled></td>
+                <td class="col-dato"><input type="number" class="v-pini" value="${reg.pini}" oninput="calcularTodo(this)" placeholder="0" disabled></td>
+                <td class="col-dato"><input type="number" class="v-pfin" value="${reg.pfin}" oninput="calcularTodo(this)" placeholder="0" disabled></td>
+                <td class="calc-res v-ml col-calc">${ml.toFixed(2)}</td>
+                <td class="col-dato"><input type="number" class="v-ancho" step="0.01" value="${reg.ancho}" oninput="calcularTodo(this)" placeholder="0.00" disabled></td>
+                <td class="calc-res v-m2 col-calc">${m2.toFixed(2)}</td>
+                <td class="col-dato"><input type="number" class="v-lini" value="${reg.lini}" oninput="calcularTodo(this)" placeholder="0" disabled></td>
+                <td class="col-dato"><input type="number" class="v-lfin" value="${reg.lfin}" oninput="calcularTodo(this)" placeholder="0" disabled></td>
+                <td class="calc-res v-ltot col-calc">${ltot.toFixed(2)}</td>
+                <td class="calc-res v-dosif col-calc-dosif">${dosif.toFixed(3)}</td>
+                <td class="col-obs"><textarea class="v-obs-text" rows="1" oninput="registrarCambio()" placeholder="Anotaciones..." disabled>${reg.obs}</textarea></td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     function agregarFila() {
@@ -257,24 +292,20 @@
     function calcularTodo(el) {
         const tr = el.closest('tr');
         
-        // 1. Metros Lineales
         const pini = parseFloat(tr.querySelector('.v-pini').value) || 0;
         const pfin = parseFloat(tr.querySelector('.v-pfin').value) || 0;
         const ml = Math.abs(pfin - pini);
         tr.querySelector('.v-ml').innerText = ml.toFixed(2);
 
-        // 2. Metros Cuadrados
         const ancho = parseFloat(tr.querySelector('.v-ancho').value) || 0;
         const m2 = ml * ancho;
         tr.querySelector('.v-m2').innerText = m2.toFixed(2);
 
-        // 3. Litros Totales
         const lini = parseFloat(tr.querySelector('.v-lini').value) || 0;
         const lfin = parseFloat(tr.querySelector('.v-lfin').value) || 0;
         const ltot = Math.abs(lini - lfin);
         tr.querySelector('.v-ltot').innerText = ltot.toFixed(2);
 
-        // 4. Dosificación (Ltrs/M2)
         const dosif = m2 > 0 ? ltot / m2 : 0;
         tr.querySelector('.v-dosif').innerText = dosif.toFixed(3);
 

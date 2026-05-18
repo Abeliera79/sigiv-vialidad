@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Control Defensas Metálicas</title>
+    <style>
+        :root {
+            --bronze: #A67C52;
+            --glass: rgba(15, 23, 42, 0.85); 
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fondo_barandas.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .planilla-container {
+            background: var(--glass); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            position: relative;
+        }
+
+        .btn-cerrar-top {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(153, 27, 27, 0.8); color: white;
+            border: 1px solid #f87171; width: 35px; height: 35px;
+            border-radius: 5px; cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+            transition: 0.2s;
+            z-index: 100;
+        }
+        .btn-cerrar-top:hover { background: #991b1b; }
+
+        .menu-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+
+        button.btn-act {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--bronze);
+            color: var(--bronze);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        button.btn-act:hover { background: rgba(166, 124, 82, 0.2); }
+        button.btn-act.active { background: #28a745; border-color: #28a745; color: white; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px; }
+        
+        th { 
+            background: rgba(166, 124, 82, 0.5); 
+            color: white; 
+            padding: 10px 2px; 
+            font-size: 0.65rem; 
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+        }
+
+        /* ANCHOS ESTRICTOS DE COLUMNAS */
+        .col-sel { width: 40px; }
+        .col-fecha { width: 125px; }
+        .col-lado { width: 130px; } 
+        .col-prog { width: 95px; } 
+        .col-mts { width: 95px; background: rgba(166,124,82,0.1); } 
+        .col-img { width: 140px; }
+        .col-obs { width: auto; }
+
+        td { border: 1px solid var(--border); padding: 4px; text-align: center; }
+
+        input, textarea, select {
+            background: rgba(0,0,0,0.4); 
+            border: none;
+            color: white; 
+            width: 100%; 
+            padding: 5px 3px;
+            box-sizing: border-box;
+            font-size: 0.75rem;
+        }
+        option { background: #1e293b; color: white; }
+
+        input:disabled, textarea:disabled, select:disabled {
+            background: transparent; border: none; color: #eee; opacity: 0.9; appearance: none; -webkit-appearance: none;
+        }
+
+        .calc-res { font-size: 0.75rem; font-weight: bold; color: #ffd700; }
+        
+        .btn-ojo {
+            background: rgba(166, 124, 82, 0.3); border: 1px solid var(--bronze);
+            color: #ffd700; cursor: pointer; padding: 2px 6px; border-radius: 4px;
+        }
+
+        #modalImagen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
+        }
+
+        @media print {
+            body { background: white !important; color: black !important; }
+            .planilla-container { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            .menu-bar, .btn-cerrar-top, .col-sel, td:first-child, style, script, button, input[type="file"] { display: none !important; }
+            th { background: #e2e8f0 !important; color: black !important; border: 1px solid #cbd5e1 !important; }
+            td { color: black !important; border: 1px solid #cbd5e1 !important; }
+            input, textarea, select { color: black !important; background: transparent !important; }
+            .calc-res { color: black !important; }
+            .btn-ojo { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="modalImagen" onclick="this.style.display='none'">
+    <img id="imgGrande" src="" style="max-width: 90%; max-height: 90%; border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(0,0,0,0.8);">
+</div>
+
+<div class="planilla-container">
+    <button class="btn-cerrar-top" onclick="salirSistema()">×</button>
+    
+    <div style="border-bottom: 2px solid var(--bronze); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h2 style="color: #ffd700; margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 1.4rem;">CONTROL DEFENSAS METÁLICAS (FLEX BEAM)</h2>
+            <p style="color: #94a3b8; font-size: 0.7rem; margin: 5px 0 10px 0; font-weight: bold;">S.I.G.I.V. - INSPECCIÓN TÉCNICA DE OBRA</p>
+        </div>
+        <div style="color: #ffd700; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">
+            MODO: <span id="indicadorModo">LECTURA</span>
+        </div>
+    </div>
+
+    <div class="menu-bar">
+        <button id="btnEditar" class="btn-act" onclick="toggleEdicion()">Editar</button>
+        <button id="btnAgregar" class="btn-act" style="display: none;" onclick="agregarFila()">Agregar Fila</button>
+        <button class="btn-act" style="background: rgba(127, 29, 29, 0.6); border-color: #f87171; color: #f87171;" onclick="eliminarFilas()">Eliminar</button>
+        <button class="btn-act" onclick="imprimirPlanilla()">Imprimir / PDF</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table id="tablaBarandas">
+            <thead>
+                <tr>
+                    <th class="col-sel">Sel.</th>
+                    <th class="col-fecha">Fecha</th>
+                    <th class="col-lado">Lado</th>
+                    <th class="col-prog">Prog. Inicial</th>
+                    <th class="col-prog">Prog. Final</th>
+                    <th class="col-mts">Mtrs. Lin.</th>
+                    <th class="col-img">Imagen</th>
+                    <th class="col-obs">Observación</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button class="btn-act" style="border-color: #ff6b6b; color: #ff6b6b;" onclick="confirmarVolver()">VOLVER</button>
+    </div>
+</div>
+
+<script>
+    let editando = false;
+    let cambiosSinGuardar = false;
+    let bancoImagenes = {};
+
+    window.onload = function() {
+        cargarDatosGuardados();
+    };
+
+    window.addEventListener('beforeunload', function (e) {
+        if (cambiosSinGuardar) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    function registrarCambio() { cambiosSinGuardar = true; }
+
+    function toggleEdicion() {
+        const btn = document.getElementById('btnEditar');
+        const btnAdd = document.getElementById('btnAgregar');
+        const ind = document.getElementById('indicadorModo');
+        
+        if (editando) {
+            guardarDatosInternos();
+            editando = false;
+            btn.classList.remove('active');
+            btn.innerText = "EDITAR";
+            ind.innerText = "LECTURA";
+            ind.style.color = "#ffd700";
+            btnAdd.style.display = "none";
+        } else {
+            editando = true;
+            btn.classList.add('active');
+            btn.innerText = "GUARDAR CAMBIOS";
+            ind.innerText = "EDICIÓN ACTIVA";
+            ind.style.color = "#28a745";
+            btnAdd.style.display = "inline-block";
+        }
+
+        document.querySelectorAll('#tablaBarandas input, #tablaBarandas textarea, #tablaBarandas select').forEach(el => {
+            el.disabled = !editando;
+        });
+        
+        actualizarVisibilidadBotonesOjo();
+    }
+
+    function actualizarVisibilidadBotonesOjo() {
+        document.querySelectorAll('.btn-ojo').forEach(btn => {
+            const id = btn.getAttribute('data-id');
+            const tieneImg = bancoImagenes[id] || localStorage.getItem('img_baranda_' + id);
+            btn.style.display = tieneImg ? "inline-block" : "none";
+        });
+        document.querySelectorAll('.file-input-control').forEach(inp => {
+            inp.style.display = editando ? "inline-block" : "none";
+        });
+    }
+
+    function guardarDatosInternos() {
+        const filas = document.querySelectorAll('#tablaBarandas tbody tr');
+        let listaDatos = [];
+
+        filas.forEach(fila => {
+            const id = fila.getAttribute('data-id');
+            let registro = {
+                id: id,
+                fecha: fila.querySelector('.v-fecha').value,
+                lado: fila.querySelector('.v-lado').value,
+                ini: fila.querySelector('.v-ini').value,
+                fin: fila.querySelector('.v-fin').value,
+                obs: fila.querySelector('.v-obs').value
+            };
+            listaDatos.push(registro);
+        });
+
+        localStorage.setItem('datosPlanillaBarandas', JSON.stringify(listaDatos));
+        cambiosSinGuardar = false; 
+        alert("¡Cambios guardados internamente en la planilla!");
+    }
+
+    function cargarDatosGuardados() {
+        const datosAlmacenados = localStorage.getItem('datosPlanillaBarandas');
+        if (!datosAlmacenados) return;
+
+        const listaDatos = JSON.parse(datosAlmacenados);
+        const tbody = document.querySelector('#tablaBarandas tbody');
+        tbody.innerHTML = ""; 
+
+        listaDatos.forEach(reg => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-id', reg.id);
+            
+            const ini = parseFloat(reg.ini) || 0;
+            const fin = parseFloat(reg.fin) || 0;
+            const mts = Math.abs(fin - ini);
+
+            tr.innerHTML = `
+                <td class="col-sel"><input type="checkbox" class="row-sel" style="transform: scale(1.1);"></td>
+                <td class="col-fecha"><input type="date" class="v-fecha" value="${reg.fecha}" onchange="registrarCambio()" disabled></td>
+                <td class="col-lado">
+                    <select class="v-lado" disabled>
+                        <option value="DERECHO" ${reg.lado=='DERECHO'?'selected':''}>DERECHO</option>
+                        <option value="IZQUIERDO" ${reg.lado=='IZQUIERDO'?'selected':''}>IZQUIERDO</option>
+                        <option value="CANTERO" ${reg.lado=='CANTERO'?'selected':''}>CANTERO</option>
+                        <option value="ISLETA" ${reg.lado=='ISLETA'?'selected':''}>ISLETA</option>
+                        <option value="DIVISOR" ${reg.lado=='DIVISOR'?'selected':''}>DIVISOR</option>
+                    </select>
+                </td>
+                <td class="col-prog"><input type="number" class="v-ini" value="${reg.ini}" oninput="calcular(this)" placeholder="0" disabled></td>
+                <td class="col-prog"><input type="number" class="v-fin" value="${reg.fin}" oninput="calcular(this)" placeholder="0" disabled></td>
+                <td class="calc-res v-mts col-mts">${mts.toFixed(2)}</td>
+                <td class="col-img">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <input type="file" accept="image/*" class="file-input-control" onchange="gestionarArchivo(this, ${reg.id})" style="font-size: 0.6rem; display:none;">
+                        <button class="btn-ojo" data-id="${reg.id}" onclick="verImagen(this)">👁️</button>
+                    </div>
+                </td>
+                <td class="col-obs"><textarea class="v-obs" rows="1" oninput="registrarCambio()" placeholder="Anotaciones..." disabled>${reg.obs}</textarea></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        actualizarVisibilidadBotonesOjo();
+    }
+
+    function agregarFila() {
+        if(!editando) return;
+        const tbody = document.querySelector('#tablaBarandas tbody');
+        const tr = document.createElement('tr');
+        const id = Date.now();
+        tr.setAttribute('data-id', id);
+        
+        tr.innerHTML = `
+            <td class="col-sel"><input type="checkbox" class="row-sel" style="transform: scale(1.1);"></td>
+            <td class="col-fecha"><input type="date" class="v-fecha" value="${new Date().toISOString().split('T')[0]}" onchange="registrarCambio()"></td>
+            <td class="col-lado">
+                <select class="v-lado">
+                    <option value="DERECHO">DERECHO</option>
+                    <option value="IZQUIERDO">IZQUIERDO</option>
+                    <option value="CANTERO">CANTERO</option>
+                    <option value="ISLETA">ISLETA</option>
+                    <option value="DIVISOR">DIVISOR</option>
+                </select>
+            </td>
+            <td class="col-prog"><input type="number" class="v-ini" oninput="calcular(this)" placeholder="0"></td>
+            <td class="col-prog"><input type="number" class="v-fin" oninput="calcular(this)" placeholder="0"></td>
+            <td class="calc-res v-mts col-mts">0.00</td>
+            <td class="col-img">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <input type="file" accept="image/*" class="file-input-control" onchange="gestionarArchivo(this, ${id})" style="font-size: 0.6rem;">
+                    <button class="btn-ojo" data-id="${id}" style="display:none;" onclick="verImagen(this)">👁️</button>
+                </div>
+            </td>
+            <td class="col-obs"><textarea class="v-obs" rows="1" oninput="registrarCambio()" placeholder="Anotaciones..."></textarea></td>
+        `;
+        tbody.appendChild(tr);
+        registrarCambio();
+    }
+
+    function calcular(el) {
+        const tr = el.closest('tr');
+        const ini = parseFloat(tr.querySelector('.v-ini').value) || 0;
+        const fin = parseFloat(tr.querySelector('.v-fin').value) || 0;
+        tr.querySelector('.v-mts').innerText = Math.abs(fin - ini).toFixed(2);
+        registrarCambio();
+    }
+
+    function gestionarArchivo(input, id) {
+        if(input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                bancoImagenes[id] = e.target.result;
+                localStorage.setItem('img_baranda_' + id, e.target.result);
+                registrarCambio();
+                actualizarVisibilidadBotonesOjo();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function verImagen(btn) {
+        const id = btn.getAttribute('data-id');
+        const imgData = bancoImagenes[id] || localStorage.getItem('img_baranda_' + id);
+        if(imgData) {
+            document.getElementById('imgGrande').src = imgData;
+            document.getElementById('modalImagen').style.display = 'flex';
+        } else {
+            alert("No hay ninguna imagen cargada en este registro.");
+        }
+    }
+
+    function eliminarFilas() {
+        if(!editando) return alert("Habilite 'EDITAR' primero.");
+        const sel = document.querySelectorAll('.row-sel:checked');
+        if(sel.length === 0) return alert("Seleccione filas para eliminar.");
+        if(confirm(`¿Desea eliminar las ${sel.length} filas seleccionadas?`)) {
+            sel.forEach(cb => {
+                const tr = cb.closest('tr');
+                const id = tr.getAttribute('data-id');
+                localStorage.removeItem('img_baranda_' + id);
+                delete bancoImagenes[id];
+                tr.remove();
+            });
+            registrarCambio();
+        }
+    }
+
+    function imprimirPlanilla() { window.print(); }
+    
+    function salirSistema() { 
+        if(confirm("¿Salir del sistema S.I.G.I.V.?")) {
+            cambiosSinGuardar = false;
+            window.location.href = 'index.html'; 
+        }
+    }
+
+    function confirmarVolver() {
+        if (cambiosSinGuardar) {
+            if (confirm("¿Desea regresar al menú de control? Los cambios no guardados se perderán.")) {
+                window.location.href = 'control_obra.html'; 
+            }
+        } else {
+            window.location.href = 'control_obra.html';
+        }
+    }
+</script>
+</body>
+</html>

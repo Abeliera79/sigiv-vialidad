@@ -47,7 +47,6 @@
         .btn-process { background: var(--vialidad-blue); color: #fff; }
         .btn-process:hover { background: #0070c0; transform: scale(1.02); }
 
-        /* Estilo para Impresión / Planilla Blanca */
         #seccionHoras { 
             display: none; 
             background: white; 
@@ -79,15 +78,13 @@
         .btn-back-menu:hover { background: #ff6b6b; color: white; }
 
         .no-print { display: flex; gap: 15px; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        
-        /* Columna Franco en Edición */
         .col-franco { width: 40px; background: var(--ocre); color: white; }
 
         @media print {
             .no-print, .admin-panel, .col-franco { display: none !important; }
             .tabla-modelo th:first-child, .tabla-modelo td:first-child { display: none !important; }
             body { background: white !important; }
-            #seccionHoras { display: block !important; border: none; padding: 0; box-shadow: none; width: 100%; }
+            #seccionHoras { display: block !important; border: none; padding: 0; box-shadow: none; width: 100%; height: auto; }
             .tabla-modelo td { height: 24px; font-size: 0.75rem; }
         }
     </style>
@@ -170,7 +167,6 @@
 </div>
 
 <script>
-    // Se utiliza la misma base de datos de Asistencia para sincronizar
     let db = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
     let agenteActivoIdx = null;
 
@@ -212,11 +208,12 @@
     function cargarDatosAsistencia() {
         const cuerpo = document.getElementById('cuerpoHoras');
         const mesAnio = document.getElementById('pickerFecha').value;
-        if(!mesAnio) return;
+        if(!mesAnio || agenteActivoIdx === null) return;
 
-        // Recuperar marcas de franco si existen
+        const agenteNombre = db[agenteActivoIdx].nombre.trim().toUpperCase();
+        const keyAgente = agenteNombre + "_" + mesAnio;
+        
         const dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
-        const keyAgente = agenteActivoIdx + "_" + mesAnio;
         const datosFrancosMes = dbFrancos[keyAgente] || {};
 
         const [anio, mes] = mesAnio.split('-');
@@ -232,7 +229,7 @@
 
         for(let d=1; d<=diasEnMes; d++) {
             const r = registrosAsistencia[d] || { m1:'', m2:'', t1:'', t2:'', color: '' };
-            const isFranco = (datosFrancosMes[d]) ? 'checked' : '';
+            const isFranco = (datosFrancosMes[d] === true) ? 'checked' : '';
             
             const hManana = diffHoras(r.m1, r.m2);
             const hTarde = diffHoras(r.t1, r.t2);
@@ -274,15 +271,23 @@
 
     function toggleMarcaFranco(checkbox, dia) {
         const mesAnio = document.getElementById('pickerFecha').value;
-        const keyAgente = agenteActivoIdx + "_" + mesAnio;
+        if(!mesAnio || agenteActivoIdx === null) return;
+
+        const agenteNombre = db[agenteActivoIdx].nombre.trim().toUpperCase();
+        const keyAgente = agenteNombre + "_" + mesAnio;
+        
         let dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
         if (!dbFrancos[keyAgente]) dbFrancos[keyAgente] = {};
-        dbFrancos[keyAgente][dia] = checkbox.checked;
+        
+        if(checkbox.checked) {
+            dbFrancos[keyAgente][dia] = true;
+        } else {
+            delete dbFrancos[keyAgente][dia];
+        }
         localStorage.setItem('db_marcas_franco_dpv', JSON.stringify(dbFrancos));
     }
 
     window.onload = actualizarLista;
 </script>
-
 </body>
 </html>

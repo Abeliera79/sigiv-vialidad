@@ -18,13 +18,13 @@
             background-size: cover; color: #fff;
         }
 
-        /* PANEL DE CONTROL IZQUIERDO (SIGIV STYLE) */
         .no-print-panel { 
             position: fixed; top: 0; left: 0; bottom: 0; width: 380px;
             background: var(--glass); color: white; padding: 25px; 
             box-shadow: 5px 0 25px rgba(0,0,0,0.7); overflow-y: auto; z-index: 1000;
             border-right: 1px solid var(--ocre);
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
         }
 
         .info-box { 
@@ -41,16 +41,15 @@
         
         .input-fecha-tabla { 
             width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; 
-            text-align: center; padding: 8px; border-radius: 5px; outline: none;
+            text-align: center; padding: 8px; border-radius: 5px; outline: none; box-sizing: border-box;
         }
         .input-fecha-tabla:focus { border-color: var(--ocre); }
-        .input-fecha-tabla:disabled { opacity: 0.4; cursor: not-allowed; border: none; }
+        .input-fecha-tabla:disabled { opacity: 0.5; cursor: not-allowed; border: none; background: transparent; color: #4ade80; font-weight: bold; }
 
         .btn-ui { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; }
         .btn-save { background: #27ae60; color: white; flex: 2; }
         .btn-save:hover { background: #219150; transform: scale(1.02); }
 
-        /* HOJA OFICIAL A4 (RESTRICCIÓN: FORMATO INALTERABLE) */
         .page {
             width: 210mm; min-height: 297mm; padding: 15mm 20mm; margin: 20px auto 20px 420px;
             background: white; color: black; box-sizing: border-box; border: 1px solid #000;
@@ -181,12 +180,11 @@
 </div>
 
 <script>
-    // Sincronización con bases de datos del sistema SIGIV
     let dbAgentes = JSON.parse(localStorage.getItem('db_asistencia_dpv')) || [];
-    let dbViaticos = JSON.parse(localStorage.getItem('db_viaticos_fijos_data')) || {};
 
     function inicializar() {
         const select = document.getElementById('selectAgente');
+        select.innerHTML = '';
         dbAgentes.forEach((ag, i) => select.add(new Option(ag.nombre, i)));
         
         const hoy = new Date();
@@ -222,42 +220,44 @@
         const mesAnio = document.getElementById('pickerMes').value;
         const tbody = document.getElementById('filasGestion');
         tbody.innerHTML = "";
-        if(!mesAnio) return;
+        if(!mesAnio || !dbAgentes[idx]) return;
 
+        const agenteNombre = dbAgentes[idx].nombre.trim().toUpperCase();
+        const keyAgente = agenteNombre + "_" + mesAnio;
         const [anio, mes] = mesAnio.split('-');
-        
-        // Buscamos francos en la base de datos sincronizada
-        // Se asume que en dbViaticos los francos se marcan con la clase 'dia-franco'
-        
-        const keyAgente1 = idx + "_" + mesAnio + "_1";
-        const keyAgente2 = idx + "_" + mesAnio + "_2";
-        
-        const procesarData = (data) => {
-            Object.keys(data).sort((a,b)=>a-b).forEach(dia => {
-                if (data[dia].c === 'dia-franco') {
-                    const tr = document.createElement('tr');
-                    const fechaUsoActual = data[dia].fecha_uso_real || '';
-                    const estaUsado = data[dia].usado_bloqueado === true;
-                    tr.innerHTML = `
-                        <td style="font-weight:bold;">${dia.padStart(2,'0')}/${mes}/${anio}</td>
-                        <td>
-                            <input type="text" class="input-fecha-tabla" 
-                                placeholder="dd/mm/aaaa"
-                                oninput="aplicarMascaraFecha(this)" 
-                                value="${fechaUsoActual}" 
-                                ${estaUsado ? 'disabled' : ''}>
-                        </td>`;
-                    tr.dataset.adq = `${dia.padStart(2,'0')}/${mes}/${anio}`;
-                    tr.dataset.diaOriginal = dia;
-                    tbody.appendChild(tr);
-                }
-            });
-        };
 
-        if(dbViaticos[keyAgente1]) procesarData(dbViaticos[keyAgente1]);
-        if(dbViaticos[keyAgente2]) procesarData(dbViaticos[keyAgente2]);
+        const dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
+        const datosFrancosMes = dbFrancos[keyAgente] || {};
+        
+        const dbUsosReal = JSON.parse(localStorage.getItem('db_usos_franco_real_dpv')) || {};
+        const usosAgenteMes = dbUsosReal[keyAgente] || {};
 
-        if(tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="2" style="color:gray; padding:20px;">Sin francos en este mes.</td></tr>`;
+        // Recorrido estricto basado en las claves de los elementos activos
+        Object.keys(datosFrancosMes).map(Number).sort((a,b)=>a-b).forEach(dia => {
+            if (datosFrancosMes[dia] === true) {
+                const tr = document.createElement('tr');
+                const diaStr = String(dia).padStart(2, '0');
+                const fechaUsoActual = usosAgenteMes[dia] ? usosAgenteMes[dia].fecha : '';
+                const estaUsado = usosAgenteMes[dia] ? usosAgenteMes[dia].bloqueado : false;
+                
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${diaStr}/${mes}/${anio}</td>
+                    <td>
+                        <input type="text" class="input-fecha-tabla" 
+                            placeholder="dd/mm/aaaa"
+                            oninput="aplicarMascaraFecha(this)" 
+                            value="${fechaUsoActual}" 
+                            ${estaUsado ? 'disabled' : ''}>
+                    </td>`;
+                tr.dataset.adq = `${diaStr}/${mes}/${anio}`;
+                tr.dataset.diaOriginal = dia;
+                tbody.appendChild(tr);
+            }
+        });
+
+        if(tbody.innerHTML === "") {
+            tbody.innerHTML = `<tr><td colspan="2" style="color:gray; padding:20px;">Sin francos habilitados en este mes.</td></tr>`;
+        }
         sincronizarConHoja();
     }
 
@@ -265,7 +265,7 @@
         const listaAdq = [], listaUso = [];
         document.querySelectorAll('#filasGestion tr').forEach(fila => {
             const input = fila.querySelector('input');
-            if(input && input.value.length === 10 && !input.disabled) {
+            if(input && input.value.length === 10) {
                 listaAdq.push(fila.dataset.adq);
                 listaUso.push(input.value);
             }
@@ -275,14 +275,23 @@
         
         const idx = document.getElementById('selectAgente').value;
         let saldoTotal = 0;
-        for (let key in dbViaticos) {
-            if (key.startsWith(idx + "_")) {
-                for (let d in dbViaticos[key]) {
-                    if (dbViaticos[key][d].c === 'dia-franco' && !dbViaticos[key][d].usado_bloqueado) saldoTotal++;
+        if(dbAgentes[idx]) {
+            const agenteNombre = dbAgentes[idx].nombre.trim().toUpperCase();
+            const dbFrancos = JSON.parse(localStorage.getItem('db_marcas_franco_dpv')) || {};
+            const dbUsosReal = JSON.parse(localStorage.getItem('db_usos_franco_real_dpv')) || {};
+
+            for (let key in dbFrancos) {
+                if (key.startsWith(agenteNombre + "_")) {
+                    for (let d in dbFrancos[key]) {
+                        if (dbFrancos[key][d] === true) {
+                            const yaUsado = dbUsosReal[key] && dbUsosReal[key][d] && dbUsosReal[key][d].bloqueado;
+                            if(!yaUsado) saldoTotal++;
+                        }
+                    }
                 }
             }
         }
-        document.getElementById('saldoRestante').innerText = Math.max(0, saldoTotal - listaUso.length);
+        document.getElementById('saldoRestante').innerText = Math.max(0, saldoTotal);
     }
 
     function limpiarSeleccion() {
@@ -293,24 +302,31 @@
     function guardarYImprimir() {
         const idx = document.getElementById('selectAgente').value;
         const mesAnio = document.getElementById('pickerMes').value;
+        if(!dbAgentes[idx] || !mesAnio) return;
+
+        const agenteNombre = dbAgentes[idx].nombre.trim().toUpperCase();
+        const keyAgente = agenteNombre + "_" + mesAnio;
+        
+        let dbUsosReal = JSON.parse(localStorage.getItem('db_usos_franco_real_dpv')) || {};
+        if (!dbUsosReal[keyAgente]) dbUsosReal[keyAgente] = {};
+        
         let cambios = false;
 
         document.querySelectorAll('#filasGestion tr').forEach(fila => {
             const input = fila.querySelector('input');
             if(input && input.value.length === 10 && !input.disabled) {
                 const dia = fila.dataset.diaOriginal;
-                const quin = parseInt(dia) <= 15 ? "1" : "2";
-                const key = idx + "_" + mesAnio + "_" + quin;
-                
-                dbViaticos[key][dia].usado_bloqueado = true;
-                dbViaticos[key][dia].fecha_uso_real = input.value;
+                dbUsosReal[keyAgente][dia] = {
+                    fecha: input.value,
+                    bloqueado: true
+                };
                 cambios = true;
             }
         });
 
-        if(!cambios) return alert("Ingrese fecha de USO completa.");
+        if(!cambios) return alert("Ingrese al menos una fecha de USO completa (dd/mm/aaaa).");
         
-        localStorage.setItem('db_viaticos_fijos_data', JSON.stringify(dbViaticos));
+        localStorage.setItem('db_usos_franco_real_dpv', JSON.stringify(dbUsosReal));
         actualizarTabla();
         window.print();
     }

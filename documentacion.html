@@ -74,15 +74,17 @@
             border: none;
             transition: 0.3s;
             font-size: 0.8rem;
+            color: white;
         }
 
         .btn-edit { background: var(--ocre-light); color: #000; }
         .btn-save { background: #27ae60; color: white; display: none; }
-        .btn-add { background: #2980b9; color: white; }
-        .btn-del { background: var(--danger); color: white; }
-        .btn-view { background: #7f8c8d; color: white; padding: 5px 10px; visibility: hidden; }
+        .btn-add { background: #2980b9; color: white; display: none; }
+        .btn-del { background: var(--danger); color: white; display: none; }
+        .btn-view { background: #7f8c8d; color: white; padding: 5px 10px; display: none; font-size: 0.75rem; border-radius: 4px; }
+        .btn-view:hover { background: #ffd700; color: black; }
 
-        .edit-active .btn-save { display: inline-block; }
+        .edit-active .btn-save, .edit-active .btn-add, .edit-active .btn-del { display: inline-block; }
         .edit-active .btn-edit { display: none; }
 
         table {
@@ -115,11 +117,17 @@
             padding: 8px;
             border-radius: 4px;
             outline: none;
+            box-sizing: border-box;
         }
 
         .edit-active .field-input {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-gold);
+        }
+
+        /* Bloqueo visual estricto de casilleros e inputs para Edge */
+        .field-input:disabled, .row-chk:disabled, input[type="file"]:disabled {
+            color: #aaa !important; opacity: 0.7 !important; background: transparent !important; border: 1px solid transparent !important; cursor: not-allowed;
         }
 
         .btn-back {
@@ -135,14 +143,9 @@
             transition: 0.3s;
         }
 
-        .btn-back:hover {
-            background: #ff6b6b;
-            color: white;
-        }
+        .btn-back:hover { background: #ff6b6b; color: white; }
 
-        input[type="file"] {
-            display: none;
-        }
+        input[type="file"] { display: none; }
 
         .custom-file-upload {
             border: 1px solid var(--ocre-light);
@@ -152,7 +155,10 @@
             border-radius: 5px;
             font-size: 0.8rem;
             color: var(--ocre-light);
+            transition: 0.2s;
         }
+        .custom-file-upload:hover { background: var(--ocre-light); color: black; }
+        .custom-file-upload.disabled-label { border-color: #555 !important; color: #555 !important; cursor: not-allowed !important; background: transparent !important; }
 
         .edit-active .custom-file-upload {
             background: rgba(176, 141, 92, 0.2);
@@ -167,28 +173,27 @@
             <h1>Gestión Documental de Obra</h1>
             <div>
                 <button class="btn btn-edit" id="btnEdit" onclick="toggleEdit()">Habilitar Edición</button>
-                <button class="btn btn-save" id="btnSave" onclick="toggleEdit()">Guardar Cambios</button>
+                <button class="btn btn-save" id="btnSave" onclick="guardarYFinalizarDocumentos()">Guardar Cambios</button>
             </div>
         </div>
 
         <div class="control-panel">
-            <button class="btn btn-add" onclick="addRow()">+ Nueva Documentación</button>
-            <button class="btn btn-del" onclick="deleteRows()">Eliminar Seleccionados</button>
+            <button class="btn btn-add" id="btnFilaNueva" onclick="addRow()">+ Nueva Documentación</button>
+            <button class="btn btn-del" id="btnBorrarFila" onclick="deleteRows()">Eliminar Seleccionados</button>
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th width="30"></th>
+                    <th width="40">Sel.</th>
                     <th>Tipo de Documento / Descripción</th>
                     <th>Fecha de Vencimiento / Emisión</th>
                     <th>Estado / Referencia</th>
                     <th>Archivo (PDF/IMG)</th>
-                    <th>Acción</th>
+                    <th width="100">Acción</th>
                 </tr>
             </thead>
-            <tbody id="documentTableBody">
-                </tbody>
+            <tbody id="documentTableBody"></tbody>
         </table>
 
         <button onclick="safeBack()" class="btn-back">⬅ Volver a Administración</button>
@@ -197,67 +202,138 @@
 
 <script>
     let editMode = false;
+    let obraActual = sessionStorage.getItem('obraActual') || "Generica";
+    let archivosCargadosMemoria = {}; // Repositorio binario temporal de lectura síncrona
+
+    window.onload = function() {
+        cargarDocumentosDesdeStorage();
+    };
 
     function toggleEdit() {
         editMode = !editMode;
-        document.getElementById('mainContainer').classList.toggle('edit-active');
+        document.getElementById('mainContainer').classList.toggle('edit-active', editMode);
         document.getElementById('btnEdit').style.display = editMode ? 'none' : 'inline-block';
         document.getElementById('btnSave').style.display = editMode ? 'inline-block' : 'none';
         
-        if(!editMode) {
-            alert("💾 Documentación actualizada correctamente.");
-        }
+        // Bloqueo y desbloqueo estricto de elementos interactivos del DOM
+        document.querySelectorAll('#documentTableBody input, #documentTableBody select').forEach(i => i.disabled = !editMode);
+        document.querySelectorAll('.custom-file-upload').forEach(lbl => {
+            if(!editMode) lbl.classList.add('disabled-label');
+            else lbl.classList.remove('disabled-label');
+        });
     }
 
-    function addRow() {
+    function addRow(datos = null) {
         const tbody = document.getElementById('documentTableBody');
         const row = document.createElement('tr');
-        const rowId = Date.now();
+        
+        // Generar un ID incremental o usar el histórico guardado
+        const d = datos || { id: Date.now() + Math.floor(Math.random() * 1000), desc: '', fecha: '', estado: '', fileName: '', src: '' };
+        const rowId = d.id;
+
+        // Conservar archivo si viene del Storage
+        if(d.src) {
+            archivosCargadosMemoria[rowId] = { src: d.src, name: d.fileName };
+        }
+
+        const estadoInput = editMode ? '' : 'disabled';
+        const claseLabel = editMode ? '' : 'disabled-label';
 
         row.innerHTML = `
-            <td><input type="checkbox" class="row-chk"></td>
-            <td><input type="text" class="field-input" placeholder="Ej: Póliza de Seguro"></td>
-            <td><input type="date" class="field-input"></td>
-            <td><input type="text" class="field-input" placeholder="Vigente / Pendiente"></td>
+            <td><input type="checkbox" class="row-chk" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-desc" placeholder="Ej: Póliza de Seguro" value="${d.desc}" ${estadoInput}></td>
+            <td><input type="date" class="field-input v-fecha" value="${d.fecha}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-estado" placeholder="Vigente / Pendiente" value="${d.estado}" ${estadoInput}></td>
             <td>
-                <label class="custom-file-upload">
-                    <input type="file" onchange="handleFile(this, ${rowId})">
+                <label class="custom-file-upload ${claseLabel}">
+                    <input type="file" accept="image/*, .pdf" onchange="handleFile(this, ${rowId})" ${estadoInput}>
                     📂 Cargar
                 </label>
-                <span id="name-${rowId}" style="font-size: 0.7rem; margin-left: 5px; color: #aaa;"></span>
+                <span id="name-${rowId}" style="font-size: 0.75rem; margin-left: 8px; color: #ffd700; font-weight: bold;">${d.fileName || ''}</span>
             </td>
             <td>
-                <button class="btn btn-view" id="view-${rowId}" onclick="verArchivo(${rowId})">VER</button>
+                <button class="btn btn-view" id="view-${rowId}" onclick="verArchivo(${rowId})" style="display: ${d.src ? 'inline-block' : 'none'}">👁️ Ver</button>
             </td>
         `;
+        row.dataset.id = rowId;
         tbody.appendChild(row);
     }
 
-    let fileStorage = {}; // Simulación de almacenamiento local de archivos
-
     function handleFile(input, id) {
-        if(input.files.length > 0) {
+        const btnOjo = document.getElementById(`view-${id}`);
+        if(input.files && input.files[0]) {
             const file = input.files[0];
             document.getElementById(`name-${id}`).innerText = file.name;
-            document.getElementById(`view-${id}`).style.visibility = 'visible';
             
-            // Creamos una URL temporal para previsualizar
-            fileStorage[id] = URL.createObjectURL(file);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Almacenamiento Base64 persistente indestructible para Microsoft Edge
+                archivosCargadosMemoria[id] = { src: e.target.result, name: file.name };
+                btnOjo.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
         }
     }
 
     function verArchivo(id) {
-        if(fileStorage[id]) {
-            window.open(fileStorage[id], '_blank');
+        if(archivosCargadosMemoria[id]) {
+            const fileData = archivosCargadosMemoria[id];
+            const win = window.open("");
+            if (fileData.src.includes('data:image/')) {
+                win.document.write(`<body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh;"><img src="${fileData.src}" style="max-width:100%; max-height:100%;"></body>`);
+            } else {
+                win.document.write(`<body style="margin:0; height:100vh;"><iframe src="${fileData.src}" frameborder="0" style="width:100%; height:100%;" allowfullscreen></iframe></body>`);
+            }
+        }
+    }
+
+    function guardarYFinalizarDocumentos() {
+        const listaDocumentos = [];
+        document.querySelectorAll('#documentTableBody tr').forEach(row => {
+            const rowId = row.dataset.id;
+            const desc = row.querySelector('.v-desc').value.trim();
+            if(desc !== "") {
+                listaDocumentos.push({
+                    id: rowId,
+                    desc: desc,
+                    fecha: row.querySelector('.v-fecha').value,
+                    estado: row.querySelector('.v-estado').value,
+                    fileName: document.getElementById(`name-${rowId}`).innerText,
+                    src: archivosCargadosMemoria[rowId] ? archivosCargadosMemoria[rowId].src : ''
+                });
+            }
+        });
+
+        const key = 'sigiv_documentos_' + obraActual.replace(/\s+/g, '_');
+        localStorage.setItem(key, JSON.stringify(listaDocumentos));
+        toggleEdit();
+        alert("💾 Base de datos documental actualizada correctamente en S.I.G.I.V.");
+    }
+
+    function cargarDocumentosDesdeStorage() {
+        const tbody = document.getElementById('documentTableBody');
+        tbody.innerHTML = '';
+        const key = 'sigiv_documentos_' + obraActual.replace(/\s+/g, '_');
+        const guardados = JSON.parse(localStorage.getItem(key));
+
+        if (guardados && guardados.length > 0) {
+            guardados.forEach(doc => addRow(doc));
+        } else {
+            addRow(); // Una fila vacía inicial reglamentaria
         }
     }
 
     function deleteRows() {
+        if(!editMode) return;
         const checks = document.querySelectorAll('.row-chk:checked');
         if(checks.length === 0) return alert("Seleccione los documentos a eliminar.");
         
         if(confirm("¿Seguro que desea eliminar los registros seleccionados?")) {
-            checks.forEach(c => c.closest('tr').remove());
+            checks.forEach(c => {
+                const row = c.closest('tr');
+                delete archivosCargadosMemoria[row.dataset.id];
+                row.remove();
+            });
         }
     }
 
@@ -271,9 +347,6 @@
             window.location.href = destino;
         }
     }
-
-    // Agregar una fila inicial por cortesía
-    window.onload = addRow;
 </script>
 
 </body>

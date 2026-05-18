@@ -12,123 +12,46 @@
             --border-gold: rgba(255, 215, 0, 0.3);
         }
 
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: white;
-            overflow: hidden;
-        }
-
-        .background-container {
-            background-image: url('fondo_partes.jpg');
-            background-size: cover; 
-            background-position: center; 
-            height: 100vh;
-            display: flex;
-        }
-
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: white; overflow: hidden; }
+        .background-container { background-image: url('fondo_partes.jpg'); background-size: cover; background-position: center; height: 100vh; display: flex; }
+        
         /* SIDEBAR - HISTORIAL */
-        .sidebar {
-            width: 280px; 
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-right: 1px solid var(--border-gold);
-            display: flex; 
-            flex-direction: column; 
-            padding: 25px;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        .calendar-search {
-            background: rgba(255, 215, 0, 0.1);
-            color: #ffd700;
-            border: 1px solid var(--border-gold);
-            padding: 12px;
-            border-radius: 8px;
-            width: 100%;
-            font-family: inherit;
-            cursor: pointer;
-            margin-bottom: 20px;
-            outline: none;
-        }
+        .sidebar { width: 280px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-right: 1px solid var(--border-gold); display: flex; flex-direction: column; padding: 25px; flex-shrink: 0; z-index: 10; }
+        .calendar-search { background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid var(--border-gold); padding: 12px; border-radius: 8px; width: 100%; font-family: inherit; cursor: pointer; margin-bottom: 20px; outline: none; }
+        
+        .history-container { flex-grow: 1; overflow-y: auto; margin-top: 10px; border-top: 1px solid #333; padding-top: 15px; }
+        .history-item { background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 10px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; text-align: center; }
+        .history-item:hover { background: rgba(255, 215, 0, 0.1); border-color: #ffd700; color: #ffd700; }
 
         /* CONTENIDO PRINCIPAL */
-        .main-content { 
-            flex-grow: 1; 
-            padding: 30px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
-
-        .sheet {
-            width: 100%; 
-            max-width: 900px; 
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px); 
-            border: 1px solid var(--border-gold);
-            border-radius: 15px; 
-            padding: 40px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            box-sizing: border-box;
-            margin-bottom: 50px;
-        }
-
-        .info-header { 
-            display: grid; 
-            grid-template-columns: 2fr 1fr; 
-            border-bottom: 2px solid #ffd700; 
-            padding-bottom: 15px; 
-            margin-bottom: 25px; 
-        }
-
-        .section-header { 
-            background: rgba(255, 215, 0, 0.1); 
-            color: #ffd700;
-            padding: 10px 15px; 
-            font-weight: bold; 
-            margin-top: 30px;
-            border-left: 5px solid #ffd700; 
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .sheet { width: 100%; max-width: 900px; background: var(--glass-bg); backdrop-filter: blur(25px); border: 1px solid var(--border-gold); border-radius: 15px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); box-sizing: border-box; margin-bottom: 50px; }
+        .info-header { display: grid; grid-template-columns: 2fr 1fr; border-bottom: 2px solid #ffd700; padding-bottom: 15px; margin-bottom: 25px; }
+        .section-header { background: rgba(255, 215, 0, 0.1); color: #ffd700; padding: 10px 15px; font-weight: bold; margin-top: 30px; border-left: 5px solid #ffd700; font-size: 0.9rem; text-transform: uppercase; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 10px; font-size: 0.7rem; color: #ffd700; text-transform: uppercase; border-bottom: 1px solid var(--border-gold); }
         td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
-
+        
         .field-label { font-size: 0.7rem; color: #ffd700; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         .field-value { width:100%; background:transparent; border:none; border-bottom:1px solid #444; color:white; padding:8px 0; outline:none; font-size: 1rem; }
-
-        /* TEXTAREA DINÁMICO */
-        #tareas {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,215,0,0.2); 
-            color: white; padding: 15px; margin-top: 10px; border-radius: 8px; 
-            resize: none; overflow: hidden; min-height: 120px; font-family: inherit;
-            line-height: 1.6; box-sizing: border-box;
-        }
-
+        
+        #tareas { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,215,0,0.2); color: white; padding: 15px; margin-top: 10px; border-radius: 8px; resize: none; overflow: hidden; min-height: 120px; font-family: inherit; line-height: 1.6; box-sizing: border-box; }
         #tareas-print { display: none; }
-
-        /* BOTONES FLOTANTES */
+        
         .controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100; }
         .btn { padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; color: white; text-transform: uppercase; }
         .btn-print { background: #444; border: 1px solid #666; }
         .btn-save { background: #27ae60; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4); }
         .btn-back { margin-top: auto; background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; cursor: pointer; font-size: 0.8rem; padding: 12px; border-radius: 10px; text-align:center; text-decoration:none; font-weight: bold; }
         .btn-back:hover { background: #ff6b6b; color: white; }
-
-        .cant-input {
-            width:50px; background:transparent; border:1px solid #444; color:white; text-align:center; outline:none; font-weight: bold;
-        }
+        
+        .cant-input { width:50px; background:transparent; border:1px solid #444; color:white; text-align:center; outline:none; font-weight: bold; }
         .cant-input:disabled { border: none; color: #ffd700; }
+        .note-input { width: 100%; background: transparent; border: none; color: #eee; outline: none; }
 
         @media print {
-            .sidebar, .controls, .btn-back, #tareas, .cant-input { display: none !important; }
+            .sidebar, .controls, .btn-back, #tareas, .cant-input, .note-input { display: none !important; }
             #tareas-print { display: block !important; white-space: pre-wrap; color: black; border: 1px solid #ccc; padding: 10px; }
             body, .main-content { overflow: visible !important; display: block !important; background: white !important; }
             .sheet { background: white !important; color: black !important; border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
@@ -136,9 +59,9 @@
             .field-value, th, td { color: black !important; border-bottom: 1px solid #ddd !important; }
             .field-label { color: #666 !important; }
             table { width: 100% !important; }
-            .print-cant-val { display: inline-block !important; font-weight: bold; }
+            .print-note-val, .print-cant-val { display: inline-block !important; font-weight: bold; }
         }
-        .print-cant-val { display: none; }
+        .print-cant-val, .print-note-val { display: none; }
     </style>
 </head>
 <body>
@@ -146,14 +69,13 @@
 <div class="background-container">
     <div class="sidebar">
         <h2 style="color:#ffd700; font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 5px; text-align: center;">S.I.G.I.V.</h2>
-        <p style="font-size: 0.65rem; color: #aaa; text-align: center; margin-bottom: 30px; text-transform: uppercase;">Módulo de Partes Diarios</p>
+        <p style="font-size: 0.65rem; color: #aaa; text-align: center; margin-bottom: 20px; text-transform: uppercase;">Módulo de Partes Diarios</p>
         
         <label class="field-label">Seleccionar Fecha:</label>
-        <input type="date" class="calendar-search" id="datePicker" onchange="updateDisplayDate()">
+        <input type="date" class="calendar-search" id="datePicker" onchange="cargarPartePorFecha()">
         
-        <div id="historyList" style="margin-top: 20px; font-size: 0.8rem; color: #888; text-align: center;">
-            No hay registros guardados localmente.
-        </div>
+        <label class="field-label" style="margin-top: 15px; display: block;">Historial de Partes:</label>
+        <div class="history-container" id="historyList"></div>
         
         <button class="btn-back" onclick="safeBack()">⬅ VOLVER A ADMIN</button>
     </div>
@@ -173,11 +95,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                 <div>
                     <div class="field-label">Responsable del Parte</div>
-                    <input type="text" id="responsable" class="field-value" placeholder="Nombre del Agente Vial...">
+                    <input type="text" id="responsable" class="field-value" placeholder="Nombre del Agente Vial..." oninput="cambios = true">
                 </div>
                 <div>
                     <div class="field-label">Estado del Clima</div>
-                    <input type="text" id="clima" class="field-value" placeholder="Ej: Despejado / Viento Norte">
+                    <input type="text" id="clima" class="field-value" placeholder="Ej: Despejado / Viento Norte" oninput="cambios = true">
                 </div>
             </div>
 
@@ -211,27 +133,20 @@
 
 <div class="controls">
     <button class="btn btn-print" onclick="imprimirParte()">🖨 IMPRIMIR</button>
-    <button class="btn btn-save" onclick="guardarLocal()">💾 GUARDAR</button>
+    <button class="btn btn-save" onclick="guardarParteHistorico()">💾 GUARDAR</button>
 </div>
 
 <script>
     let cambios = false;
     let obraActual = sessionStorage.getItem('obraActual') || "Obra No Identificada";
 
-    // Diccionario relacional estricto con los mismos IDs generados por personal.html
     const diccionarioSecciones = [
-        { id: "jefatura", nombre: "Jefatura de Obra" }, 
-        { id: "admin", nombre: "Administración de Obra" }, 
-        { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, 
-        { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, 
-        { id: "hormigon", nombre: "Equipo Hormigón" }, 
-        { id: "cantera", nombre: "Equipo Cantera" }, 
-        { id: "topo", nombre: "Equipo Topografía" }, 
-        { id: "taller", nombre: "Equipo Taller" }, 
-        { id: "planta", nombre: "Equipo Planta de Asfalto" }, 
-        { id: "labo", nombre: "Equipo Laboratorio" }, 
-        { id: "grales", nombre: "Equipo Tareas Generales" }, 
-        { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }
+        { id: "jefatura", nombre: "Jefatura de Obra" }, { id: "admin", nombre: "Administración de Obra" }, 
+        { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, 
+        { id: "hormigon", nombre: "Equipo Hormigón" }, { id: "cantera", nombre: "Equipo Cantera" }, 
+        { id: "topo", nombre: "Equipo Topografía" }, { id: "taller", nombre: "Equipo Taller" }, 
+        { id: "planta", nombre: "Equipo Planta de Asfalto" }, { id: "labo", nombre: "Equipo Laboratorio" }, 
+        { id: "grales", nombre: "Equipo Tareas Generales" }, { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }
     ];
 
     window.onload = function() {
@@ -240,59 +155,179 @@
         document.getElementById('datePicker').value = hoy;
         updateDisplayDate();
         
-        sincronizarModulosSIGIV();
+        cargarPartePorFecha();
+        actualizarHistorialSidebar();
     };
 
-    // CONECTOR DINÁMICO CENTRAL DE MÓDULOS RELACIONALES
-    function sincronizarModulosSIGIV() {
+    // ARCHITECTURA CENTRAL NUEVA: Carga de Partes de forma aislada por fecha
+    function cargarPartePorFecha() {
+        const fechaSeleccionada = document.getElementById('datePicker').value;
+        if(!fechaSeleccionada) return;
+        updateDisplayDate();
+
         const cleanedObra = obraActual.replace(/\s+/g, '_');
-        
-        // 1. EXTRAER Y COMPUTAR PERSONAL DESDE LA PLANILLA DE PERSONAL
-        const keyPersonal = 'sigiv_personal_' + cleanedObra;
-        const personalGuardado = JSON.parse(localStorage.getItem(keyPersonal)) || [];
-        const tbodyPers = document.getElementById('bodyPersonal');
-        tbodyPers.innerHTML = '';
+        const keyParteHistorico = `sigiv_partediario_${cleanedObra}_${fechaSeleccionada}`;
+        const parteExistente = JSON.parse(localStorage.getItem(keyParteHistorico));
 
-        diccionarioSecciones.forEach(sec => {
-            // Suma únicamente los agentes que pertenezcan a esta sección y tengan el checkbox de Presente en true
-            const cantidadPresentes = personalGuardado.filter(p => p.seccion === sec.id && p.presente === true).length;
+        if (parteExistente) {
+            // Caso A: Si ya existe un parte guardado para esa fecha, renderiza su CAPTURA HISTÓRICA INALTERABLE
+            document.getElementById('responsable').value = parteExistente.responsable;
+            document.getElementById('clima').value = parteExistente.clima;
+            document.getElementById('tareas').value = parteExistente.tareas;
             
-            tbodyPers.innerHTML += `
-                <tr>
-                    <td><strong>${sec.nombre}</strong></td>
-                    <td style="text-align:center;">
-                        <span class="print-cant-val">${cantidadPresentes}</span>
-                        <input type="number" class="cant-input" value="${cantidadPresentes}" disabled>
-                    </td>
-                    <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="..."></td>
-                </tr>`;
-        });
-
-        // 2. EXTRAER FLOTA DE EQUIPOS DESDE LA PLANILLA DE MAQUINARIAS
-        const keyEquipos = 'sigiv_equipos_' + cleanedObra;
-        const equiposGuardados = JSON.parse(localStorage.getItem(keyEquipos)) || [];
-        const tbodyEquip = document.getElementById('bodyEquipos');
-        tbodyEquip.innerHTML = '';
-
-        // Filtra la base de datos para renderizar solo las maquinarias que marcaste como "Activo"
-        const equiposActivos = equiposGuardados.filter(e => e.activo === true);
-
-        if(equiposActivos.length > 0) {
-            equiposActivos.forEach(eq => {
-                tbodyEquip.innerHTML += `
+            // Renderizar la captura estática de personal
+            const tbodyPers = document.getElementById('bodyPersonal');
+            tbodyPers.innerHTML = '';
+            parteExistente.personal.forEach(p => {
+                tbodyPers.innerHTML += `
                     <tr>
-                        <td><span style="color:#ffd700; font-weight:bold;">${eq.interno}</span></td>
-                        <td><strong>${eq.desc}</strong> <span style="color:#888; font-size:11px;">(${eq.marca} / ${eq.modelo})</span></td>
-                        <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="Operativo"></td>
+                        <td><strong>${p.nombre}</strong></td>
+                        <td style="text-align:center;">
+                            <span class="print-cant-val">${p.cantidad}</span>
+                            <input type="number" class="cant-input" value="${p.cantidad}" disabled>
+                        </td>
+                        <td><input type="text" class="note-input v-nota-pers" value="${p.nota}"></td>
                     </tr>`;
             });
+
+            // Renderizar la captura estática de equipos
+            const tbodyEquip = document.getElementById('bodyEquipos');
+            tbodyEquip.innerHTML = '';
+            if(parteExistente.equipos.length > 0) {
+                parteExistente.equipos.forEach(eq => {
+                    tbodyEquip.innerHTML += `
+                        <tr>
+                            <td><span style="color:#ffd700; font-weight:bold;">${eq.interno}</span></td>
+                            <td><strong>${eq.desc}</strong></td>
+                            <td><input type="text" class="note-input v-nota-equip" value="${eq.nota}"></td>
+                        </tr>`;
+                });
+            } else {
+                tbodyEquip.innerHTML = `<tr><td colspan="3" style="color:gray; padding:15px; text-align:center;">Sin maquinaria activa registrada para este día.</td></tr>`;
+            }
+            cambios = false;
         } else {
-            tbodyEquip.innerHTML = `<tr><td colspan="3" style="color:gray; padding:15px; text-align:center;">Sin maquinaria activa registrada en el sistema.</td></tr>`;
+            // Caso B: Si la fecha está vacía, consulta de manera limpia el estado actual de las planillas de Personal y Equipos
+            document.getElementById('responsable').value = '';
+            document.getElementById('clima').value = '';
+            document.getElementById('tareas').value = '';
+            
+            const keyPersonal = 'sigiv_personal_' + cleanedObra;
+            const personalGuardado = JSON.parse(localStorage.getItem(keyPersonal)) || [];
+            const tbodyPers = document.getElementById('bodyPersonal');
+            tbodyPers.innerHTML = '';
+
+            diccionarioSecciones.forEach(sec => {
+                const cantidadPresentes = personalGuardado.filter(p => p.seccion === sec.id && p.presente === true).length;
+                tbodyPers.innerHTML += `
+                    <tr>
+                        <td><strong>${sec.nombre}</strong></td>
+                        <td style="text-align:center;">
+                            <span class="print-cant-val">${cantidadPresentes}</span>
+                            <input type="number" class="cant-input" value="${cantidadPresentes}" disabled>
+                        </td>
+                        <td><input type="text" class="note-input v-nota-pers" placeholder="..."></td>
+                    </tr>`;
+            });
+
+            const keyEquipos = 'sigiv_equipos_' + cleanedObra;
+            const equiposGuardados = JSON.parse(localStorage.getItem(keyEquipos)) || [];
+            const tbodyEquip = document.getElementById('bodyEquipos');
+            tbodyEquip.innerHTML = '';
+
+            const equiposActivos = equiposGuardados.filter(e => e.activo === true);
+            if(equiposActivos.length > 0) {
+                equiposActivos.forEach(eq => {
+                    tbodyEquip.innerHTML += `
+                        <tr>
+                            <td><span style="color:#ffd700; font-weight:bold;">${eq.interno}</span></td>
+                            <td><strong>${eq.desc}</strong> <span style="color:#888; font-size:11px;">(${eq.marca} / ${eq.modelo})</span></td>
+                            <td><input type="text" class="note-input v-nota-equip" placeholder="Operativo"></td>
+                        </tr>`;
+                });
+            } else {
+                tbodyEquip.innerHTML = `<tr><td colspan="3" style="color:gray; padding:15px; text-align:center;">Sin maquinaria activa registrada en el sistema.</td></tr>`;
+            }
+            cambios = true;
+        }
+        autoExpand(document.getElementById('tareas'));
+    }
+
+    // FUNCIÓN DE GUARDADO HISTÓRICO: Genera una "fotografía" aislada e inmutable de la fecha
+    function guardarParteHistorico() {
+        const fechaSeleccionada = document.getElementById('datePicker').value;
+        if(!fechaSeleccionada) return alert("Por favor, seleccione una fecha válida.");
+
+        const cleanedObra = obraActual.replace(/\s+/g, '_');
+        
+        // Empaquetar datos de personal de hoy
+        const arrPersonal = [];
+        document.querySelectorAll('#bodyPersonal tr').forEach(row => {
+            arrPersonal.push({
+                nombre: row.querySelector('td strong').innerText,
+                cantidad: row.querySelector('.cant-input').value,
+                nota: row.querySelector('.v-nota-pers').value
+            });
+        });
+
+        // Empaquetar datos de equipos de hoy
+        const arrEquipos = [];
+        document.querySelectorAll('#bodyEquipos tr').forEach(row => {
+            const internoEl = row.querySelector('td span');
+            if(internoEl) {
+                arrEquipos.push({
+                    interno: internoEl.innerText,
+                    desc: row.querySelector('td strong').innerText,
+                    nota: row.querySelector('.v-nota-equip').value
+                });
+            }
+        });
+
+        const parteDiarioObjeto = {
+            fecha: fechaSeleccionada,
+            responsable: document.getElementById('responsable').value,
+            clima: document.getElementById('clima').value,
+            tareas: document.getElementById('tareas').value,
+            personal: arrPersonal,
+            equipos: arrEquipos
+        };
+
+        const keyParteHistorico = `sigiv_partediario_${cleanedObra}_${fechaSeleccionada}`;
+        localStorage.setItem(keyParteHistorico, JSON.stringify(parteDiarioObjeto));
+        
+        cambios = false;
+        alert(`Parte Diario de la fecha ${fechaSeleccionada.split('-').reverse().join('/')} guardado con éxito.`);
+        actualizarHistorialSidebar();
+    }
+
+    function actualizarHistorialSidebar() {
+        const container = document.getElementById('historyList');
+        container.innerHTML = '';
+        const cleanedObra = obraActual.replace(/\s+/g, '_');
+        const prefijo = `sigiv_partediario_${cleanedObra}_`;
+        let contador = 0;
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(prefijo)) {
+                contador++;
+                const fechaKey = key.replace(prefijo, '');
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerText = `📅 ${fechaKey.split('-').reverse().join('/')}`;
+                div.onclick = function() {
+                    document.getElementById('datePicker').value = fechaKey;
+                    cargarPartePorFecha();
+                };
+                container.appendChild(div);
+            }
+        }
+        if(contador === 0) {
+            container.innerHTML = '<div style="color:gray; font-size:11px; padding:10px;">Sin partes guardados aún.</div>';
         }
     }
 
     function autoExpand(t) {
-        cambios = true;
         t.style.height = 'auto';
         t.style.height = (t.scrollHeight) + 'px';
     }
@@ -309,17 +344,10 @@
         setTimeout(() => { window.print(); }, 200);
     }
 
-    function guardarLocal() {
-        if(!document.getElementById('datePicker').value) return alert("Seleccione fecha.");
-        cambios = false;
-        alert("Parte Diario indexado con éxito en el servidor local.");
-    }
-
     function safeBack() {
-        if (cambios && !confirm("¿Salir sin guardar cambios?")) return;
+        if (cambios && !confirm("¿Salir sin guardar el parte de hoy?")) return;
         window.location.href = 'administracion_obra.html';
     }
 </script>
-
 </body>
 </html>

@@ -2,295 +2,486 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.I.G.I.V. - Señalamiento Vertical</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --bronze: #d4a373;
-            --bronze-dark: #a67c52;
-            --slate: #0f172a;
-            --glass-bg: rgba(15, 23, 42, 0.75);
-            --danger: #ef4444;
-            --success: #10b981;
-        }
-
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #020617 url('fondo_vertical.jpg') no-repeat center center fixed;
+        body {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fondo_vertical.jpg') !important;
             background-size: cover;
-            color: #f8fafc;
-            overflow: hidden;
+            background-attachment: fixed;
         }
-
-        .background-overlay {
-            height: 100vh; width: 100vw;
-            display: flex; justify-content: center; align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-        }
-
+        
         .planilla-container {
-            width: 97%; max-width: 1450px; height: 92vh;
-            background: var(--glass-bg);
+            max-width: 98%;
+            margin: 10px auto;
+            background: rgba(15, 23, 42, 0.4); 
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--bronze-dark);
-            border-radius: 12px; padding: 25px;
-            display: flex; flex-direction: column;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-            box-sizing: border-box;
+            border-radius: 8px;
+            padding: 15px;
             position: relative;
+            min-height: 88vh;
+            color: white;
         }
 
-        .header-sigiv {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid var(--bronze-dark);
-            padding-bottom: 10px; margin-bottom: 20px;
+        .btn-exit-x {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(153, 27, 27, 0.8); color: white;
+            border: 1px solid #f87171; width: 35px; height: 35px;
+            border-radius: 4px; cursor: pointer; font-size: 1.5rem;
+            z-index: 100; display: flex; align-items: center; justify-content: center;
         }
 
-        h2 { color: var(--bronze); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.6rem; }
-
-        .control-panel { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
-
-        .btn {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--bronze); color: var(--bronze);
-            padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; 
-            text-transform: uppercase; font-size: 0.75rem; transition: 0.3s;
+        .guia-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            overflow: auto;
         }
-        .btn:hover { background: var(--bronze); color: black; }
+
+        .guia-content {
+            margin: 2% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 900px;
+            background: #1e293b;
+            border: 2px solid var(--bronze);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .guia-img { width: 100%; height: auto; border-radius: 5px; }
+
+        .btn-cerrar-guia {
+            background: var(--bronze); color: black;
+            padding: 10px 20px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; margin-bottom: 10px;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         
-        .btn-edit.active { background: var(--danger); color: white; border-color: var(--danger); }
+        th { 
+            background: rgba(166, 124, 82, 0.35); color: var(--bronze); 
+            padding: 8px 2px; font-size: 0.65rem; text-transform: uppercase;
+            border: 1px solid rgba(166, 124, 82, 0.4);
+        }
+
+        .col-sel { width: 35px; }
+        .col-fecha { width: 110px; }
+        .col-cod { width: 90px; }
+        .col-tipo { width: 280px; }
+        .col-desc { width: auto; }
+        .col-lado { width: 130px; }
+        .col-estado { width: 150px; }
+        .col-user-img { width: 140px; }
+
+        td { border: 1px solid rgba(255,255,255,0.1); padding: 5px; text-align: center; font-size: 0.8rem; }
+
+        input, select {
+            background: rgba(0,0,0,0.5); border: 1px solid #475569;
+            color: white; width: 100%; padding: 6px;
+            border-radius: 3px; font-size: 0.75rem;
+        }
+
+        input:disabled, select:disabled {
+            background: transparent !important; border: none !important; color: #f1f5f9 !important; cursor: default; appearance: none;
+        }
+
+        select option { background-color: white !important; color: black !important; }
+
+        .btn-controles { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         
-        .btn-add { background: rgba(16, 185, 129, 0.2); color: var(--success); border-color: var(--success); }
-        .btn-add:hover { background: var(--success); color: white; }
-
-        .btn-delete { background: rgba(239, 68, 68, 0.2); color: var(--danger); border-color: var(--danger); }
-        .btn-delete:hover { background: var(--danger); color: white; }
-
-        .table-wrapper {
-            flex-grow: 1; overflow-y: auto;
-            border-radius: 8px; background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
+        .btn-entrar {
+            background: #000; border: 1px solid var(--bronze); color: var(--bronze); 
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; 
+            font-weight: bold; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem;
         }
+        .btn-entrar:hover { background: var(--bronze); color: black; }
+        .btn-entrar.active { background: #475569; color: white; border-color: #475569; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
-        th {
-            background: rgba(212, 163, 115, 0.15); color: var(--bronze);
-            padding: 12px; text-align: center; position: sticky; top: 0;
-            border-bottom: 2px solid var(--bronze-dark); z-index: 5;
-            text-transform: uppercase; font-size: 0.75rem;
-        }
+        .btn-agregar { background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981; }
+        .btn-agregar:hover { background: #10b981; color: white; }
+        .btn-eliminar { background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: #ef4444; }
+        .btn-eliminar:hover { background: #ef4444; color: white; }
 
-        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
-
-        .field-input, select {
-            background: transparent; border: 1px solid transparent;
-            color: white; width: 90%; padding: 5px; text-align: center;
-            border-radius: 4px; outline: none; font-size: 0.85rem; transition: 0.2s;
-        }
-        .edit-mode .field-input, .edit-mode select { 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(214, 163, 115, 0.3); 
-        }
-        .edit-mode .field-input:focus, .edit-mode select:focus {
-            border-color: var(--bronze); background: rgba(0,0,0,0.4);
-        }
-
-        /* Corrección texto negro sobre fondo blanco nativo de selects */
-        select option {
-            background-color: white !important;
-            color: black !important;
-        }
-
-        .modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
-            width: 100%; height: 100%; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px);
-        }
-        .modal-content {
-            background: var(--slate); margin: 3% auto; padding: 25px; width: 75%; max-width: 900px;
-            border: 1px solid var(--bronze); border-radius: 12px; color: white;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-        }
-
-        .guia-img-container {
-            width: 100%; height: 60vh; overflow-y: auto; margin-top: 15px;
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; background: #000;
-        }
-        .guia-img { width: 100%; height: auto; display: block; }
-
-        .btn-back {
-            background: transparent; border: 1px solid #ef4444; color: #ef4444;
-            padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; font-size: 0.8rem; transition: 0.3s;
-        }
-        .btn-back:hover { background: #ef4444; color: white; }
-
-        @media print {
-            .control-panel, .btn-back, th:first-child, td:first-child { display: none !important; }
-            .planilla-container { background: white; color: black; border: none; width: 100%; height: auto; }
-            h2, th { color: black; border-bottom: 2px solid black; }
-            .field-input, select { color: black !important; }
+        .btn-ojo {
+            background: rgba(166, 124, 82, 0.2); border: 1px solid var(--bronze);
+            color: var(--bronze); cursor: pointer; padding: 2px 8px;
+            border-radius: 4px; display: none; font-size: 0.85rem;
         }
     </style>
 </head>
 <body>
 
-<div class="background-overlay">
-    <div class="planilla-container" id="mainWrapper">
-        <div class="header-sigiv">
-            <div>
-                <h2>Inspección Señalamiento Vertical</h2>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">S.I.G.I.V. | ÁREA TÉCNICA</div>
-            </div>
-            <div id="txtModo" style="font-size: 0.85rem; font-weight: bold; color: var(--bronze);">MODO LECTURA</div>
-        </div>
-
-        <div class="control-panel">
-            <button class="btn btn-edit" id="btnModo" onclick="toggleEdit()">Modo Edición</button>
-            <button class="btn btn-add" id="btnAdd" style="display:none" onclick="agregarFila()">+ Agregar Señal</button>
-            <button class="btn btn-delete" id="btnDelete" style="display:none" onclick="eliminarFilas()">🗑️ Eliminar Registro</button>
-            <button class="btn" style="border-color: #fbbf24; color: #fbbf24;" onclick="abrirGuia()">📙 Guía de Carteleria</button>
-            <button class="btn" style="margin-left: auto;" onclick="window.print()">Exportar PDF</button>
-        </div>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th width="50">Sel.</th>
-                        <th width="130">Fecha</th>
-                        <th width="110">Cód. IRAM</th>
-                        <th width="160">Tipo Señal</th>
-                        <th>Descripción / Leyenda</th>
-                        <th width="140">Ubicación</th>
-                        <th width="200">Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="listaCuerpo"></tbody>
-            </table>
-        </div>
-
-        <div style="margin-top: 20px;">
-            <button class="btn-back" onclick="volver()">⬅ VOLVER AL PANEL DE OBRA</button>
-        </div>
+<div id="modalGuia" class="guia-modal">
+    <div class="guia-content">
+        <button class="btn-cerrar-guia" onclick="cerrarGuia()">CERRAR GUÍA (X)</button>
+        <img src="guia_señalamiento.jpg" alt="Guía de Señalamiento" class="guia-img">
     </div>
 </div>
 
-<div id="guiaModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content: space-between; align-items:center; border-bottom: 1px solid var(--bronze-dark); padding-bottom: 10px;">
-            <h3 style="color:var(--bronze); margin:0; text-transform: uppercase; letter-spacing: 1px;">Manual Oficial de Señalamiento</h3>
-            <button class="btn" style="border-color:var(--danger); color:var(--danger);" onclick="cerrarGuia()">CERRAR (X)</button>
+<div class="planilla-container">
+    <button class="btn-exit-x" onclick="salirSistema()">×</button>
+    
+    <div style="border-bottom: 2px solid var(--bronze); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h2 style="color: var(--bronze); margin: 0; font-family: 'Playfair Display', serif;">INSPECCIÓN SEÑALAMIENTO VERTICAL</h2>
+            <p style="color: #cbd5e1; font-size: 0.65rem; margin: 3px 0 8px 0;">S.I.G.I.V. - GESTIÓN DE ACTIVOS VIALES</p>
         </div>
-        <div class="guia-img-container">
-            <img src="guia_señalamiento.jpg" alt="Guía de Cartelería IRAM" class="guia-img">
+        <div style="color: var(--bronze); font-size: 0.7rem; margin-bottom: 8px;">
+            MODO: <span id="indicadorModo" style="font-weight: bold;">LECTURA</span>
         </div>
+    </div>
+
+    <div class="btn-controles">
+        <button id="btnEditar" class="btn-entrar" onclick="toggleEditar()">EDITAR</button>
+        <button id="btnAgregar" class="btn-entrar btn-agregar" style="display: none;" onclick="agregarFila()">AGREGAR FILA</button>
+        <button id="btnEliminar" class="btn-entrar btn-eliminar" style="display: none;" onclick="eliminarFilas()">ELIMINAR</button>
+        <button class="btn-entrar" style="background: rgba(30, 41, 59, 0.8);" onclick="imprimirPlanilla()">IMPRIMIR</button>
+        <button class="btn-entrar" style="background: #065f46; border-color: #34d399;" onclick="abrirGuia()">📙 GUÍA DE CARTELERÍA</button>
+    </div>
+
+    <table id="tablaVertical">
+        <thead>
+            <tr>
+                <th class="col-sel">Sel.</th>
+                <th class="col-fecha">Fecha</th>
+                <th class="col-cod">Código</th>
+                <th class="col-tipo">Tipo</th>
+                <th class="col-desc">Descripción</th>
+                <th class="col-lado">Lado</th>
+                <th class="col-estado">Estado</th>
+                <th class="col-user-img">Inspección</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+    </table>
+
+    <div style="margin-top: 20px;">
+        <button class="btn-entrar" style="width: 140px; background: transparent; border: 1px solid #64748b; height: 35px;" onclick="confirmarVolver()">VOLVER</button>
     </div>
 </div>
 
 <script>
-    let editando = false;
-    let datosModificados = false;
+    function abrirGuia() { document.getElementById('modalGuia').style.display = "block"; }
+    function cerrarGuia() { document.getElementById('modalGuia').style.display = "none"; window.onclick = function(e){ if(e.target==document.getElementById('modalGuia')) cerrarGuia(); } }
 
-    const catalogo = {
-        "R.1": { t: "PROHIBICIÓN", d: "NO AVANZAR" },
-        "R.27": { t: "PRIORIDAD", d: "PARE" },
-        "R.15": { t: "RESTRICCIÓN", d: "VELOCIDAD MÁXIMA" },
-        "P.4": { t: "PREVENTIVA", d: "CURVA CERRADA" },
-        "I.2": { t: "INFORMATIVA", d: "RUTA NACIONAL" }
+    const catalogoIRAM = {
+        "R.1": { "t": "SEÑAL DE PROHIBICION", "d": "NO AVANZAR" },
+        "R.2": { "t": "SEÑAL DE PROHIBICION", "d": "CONTRAMANO" },
+        "R.3 (1)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR AUTOMOVILES" },
+        "R.3 (2)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR MOTO" },
+        "R.3 (3)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR BICICLETA" },
+        "R.3 (4)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR CAMIONES" },
+        "R.3 (5)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR ACOPLADOS" },
+        "R.3 (6)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR PEATONES" },
+        "R.3 (7)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR CARRO TRACCION A SANGRE" },
+        "R.3 (8)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR NI ARREOS, NI MANADAS" },
+        "R.3 (9)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR CARROS A MANO" },
+        "R.3 (10)": { "t": "SEÑAL DE PROHIBICION", "d": "NO CIRCULAR MAQUINA AGRICOLA" },
+        "R.4 (a)": { "t": "SEÑAL DE PROHIBICION", "d": "NO GIRAR A LA IZQUIERDA" },
+        "R.4 (b)": { "t": "SEÑAL DE PROHIBICION", "d": "NO GIRAR A LA DERECHA" },
+        "R.5": { "t": "SEÑAL DE PROHIBICION", "d": "NO GIRAR EN U (NO RETOMAR)" },
+        "R.6": { "t": "SEÑAL DE PROHIBICION", "d": "NO ADELANTAR" },
+        "R.7": { "t": "SEÑAL DE PROHIBICION", "d": "NO RUIDOS MOLESTOS" },
+        "R.8": { "t": "SEÑAL DE PROHIBICION", "d": "NO ESTACIONAR" },
+        "R.9": { "t": "SEÑAL DE PROHIBICION", "d": "NO ESTACIONAR NI ADELANTARSE" },
+        "R.10": { "t": "SEÑAL DE PROHIBICION", "d": "PROHIBICION DE CAMBIAR DE CARRIL" },
+        "R.11 (a)": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITACION DE PESO" },
+        "R.11(b)": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITACION DE PESO POR EJE" },
+        "R.12": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITACION DE ALTURA" },
+        "R.13": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITACION DE ANCHO" },
+        "R.14": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITACION DE LARGO DEL VEHICULO" },
+        "R.15(1)": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITE VELOCIDAD MAXIMA" },
+        "R.15(2)": { "t": "SEÑAL DE RESTRICCION", "d": "PANEL DE VELOCIDAD MAXIMA" },
+        "R.16": { "t": "SEÑAL DE RESTRICCION", "d": "LIMITE DE VELOCIDAD MINIMA" },
+        "R.17": { "t": "SEÑAL DE RESTRICCION", "d": "ESTACIONAMIENTO EXCLUSIVO" },
+        "R.18(a)": { "t": "SEÑAL DE RESTRICCION", "d": "CIRCULACION EXCLUSIVA-TRANSPORTE PUBLICO" },
+        "R.18(b)": { "t": "SEÑAL DE RESTRICCION", "d": "CIRCULACION EXCLUSIVA PARA MOTOS Y CICLOMOTORES" },
+        "R.18(c)": { "t": "SEÑAL DE RESTRICCION", "d": "CIRCULACION EXCLUSIVA PARA BICICLETAS" },
+        "R.18(d)": { "t": "SEÑAL DE RESTRICCION", "d": "CIRCULACION EXCLUSIVA PARA JINETES" },
+        "R.18(e)": { "t": "SEÑAL DE RESTRICCION", "d": "CIRCULACION EXCLUSIVA PARA PEATONES" },
+        "R.19": { "t": "SEÑAL DE RESTRICCION", "d": "USO DE CADENAS DE NIEVE" },
+        "R.20(a)": { "t": "SEÑAL DE RESTRICCION", "d": "GIRO OBLIGATORIO A LA DERECHA" },
+        "R.20(b)": { "t": "SEÑAL DE RESTRICCION", "d": "GIRO OBLIGATORIO A LA IZQUIERDA" },
+        "R.21(a)": { "t": "SEÑAL DE RESTRICCION", "d": "SENTIDO DE CIRCULACION A LA DERECHA" },
+        "R.21(b)": { "t": "SEÑAL DE RESTRICCION", "d": "SENTIDO DE CIRCULACION A LA IZQUIERDA" },
+        "R.21(c)": { "t": "SEÑAL DE RESTRICCION", "d": "SENTIDO DE CIRCULACION HACIA ADELANTE" },
+        "R.21(d)": { "t": "SEÑAL DE RESTRICCION", "d": "SENTIDO DE CIRCULACION ALTERNATIVO" },
+        "R.22(a)": { "t": "SEÑAL DE RESTRICCION", "d": "PASO OBLIGADO DERECHA" },
+        "R.22(b)": { "t": "SEÑAL DE RESTRICCION", "d": "PASO OBLIGADO IZQUIERDA" },
+        "R.23": { "t": "SEÑAL DE RESTRICCION", "d": "TRANSITO PESADO A LA DERECHA" },
+        "R.24": { "t": "SEÑAL DE RESTRICCION", "d": "PEATONES POR LA IZQUIERDA" },
+        "R.25": { "t": "SEÑAL DE RESTRICCION", "d": "PUESTO DE CONTROL" },
+        "R.26": { "t": "SEÑAL DE RESTRICCION", "d": "COMIENZO DE DOBLE MANO" },
+        "R.27": { "t": "SEÑALES DE PRIORIDAD", "d": "PARE" },
+        "R.28": { "t": "SEÑALES DE PRIORIDAD", "d": "CEDA EL PASO" },
+        "R.29": { "t": "SEÑALES DE PRIORIDAD", "d": "PREFERENCIA DE AVANCE" },
+        "R.31": { "t": "SEÑALES DE FIN DE RESTRICCION", "d": "FIN DE PROHIBICION" },
+        "R.32": { "t": "SEÑALES DE FIN DE RESTRICCION", "d": "FIN DE RESTRICCION" },
+        "P.1/P.2 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "CRUCE FERROVIARIO-PANEL DE APROXIMACION" },
+        "P.2(b1)": { "t": "SEÑALES PREVENTIVAS", "d": "PANELES DE PREVENCION (OBSTACULO RIGIDO)" },
+        "P.2 (b2)": { "t": "SEÑALES PREVENTIVAS", "d": "PANELES DE PREVENCION (OBSTACULO RIGIDO) (EN CALZADA)" },
+        "P.2 (c1)": { "t": "SEÑALES PREVENTIVAS", "d": "PANELES DE PREVENCION (CURVA) (CHEVRON SIMPLE)" },
+        "P.2 (c2)": { "t": "SEÑALES PREVENTIVAS", "d": "PANELES DE PREVENCION (CURVA) (CHEVRON MULTIPLE)" },
+        "P.3": { "t": "SEÑALES PREVENTIVAS", "d": "CRUZ DE SAN ANDRES" },
+        "P.4": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA CERRADA" },
+        "P.5": { "t": "SEÑALES PREVENTIVAS", "d": "CRUCE DE PEATONES" },
+        "P.6": { "t": "SEÑALES PREVENTIVAS", "d": "ATENCION" },
+        "P.7 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA MODERADA" },
+        "P.7 (b)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA PRONUNCIADA DERECHA" },
+        "P.7 (c)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA PRONUNCIADA IZQUIERDA" },
+        "P.7 (d)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA Y CONTRACURVA IZQUIERDA" },
+        "P.7 (e)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA Y CONTRACURVA DERECHA" },
+        "P.7 (f)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA Y CONTRACURVA PRONUNCIADA EN \"S\" IZQUIERDA" },
+        "P.7 (g)": { "t": "SEÑALES PREVENTIVAS", "d": "CURVA Y CONTRACURVA PRONUNCIADA EN \"S\" DERECHA" },
+        "P.8 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "CAMINO SINUOSO IZQUIERDA" },
+        "P.8 (b)": { "t": "SEÑALES PREVENTIVAS", "d": "CAMINO SINUOSO DERECHA" },
+        "P.9 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "PENDIENTE DESCENDENTE" },
+        "P.9 (b)": { "t": "SEÑALES PREVENTIVAS", "d": "PENDIENTE ASCENDENTE" },
+        "P.10 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "ESTRECHAMIENTO BILATERAL" },
+        "P.10 (b)": { "t": "SEÑALES PREVENTIVAS", "d": "ESTRECHAMIENTO LATERAL DERECHA" },
+        "P.10 (c)": { "t": "SEÑALES PREVENTIVAS", "d": "ESTRECHAMIENTO LATERAL IZQUIERDA" },
+        "P.11 (a)": { "t": "SEÑALES PREVENTIVAS", "d": "PERFIL IRREGULAR (CALZADA IRREGULAR)" },
+        "P.11 (b)": { "t": "SEÑALES PREVENTIVAS", "d": "PERFIL IRREGULAR (BADEN)" },
+        "P.11 (c)": { "t": "SEÑALES PREVENTIVAS", "d": "PERFIL IRREGULAR (LOMADA)" },
+        "P.12": { "t": "SEÑALES PREVENTIVAS", "d": "CALZADA RESBALADIZA" },
+        "P.13": { "t": "SEÑALES PREVENTIVAS", "d": "PROYECCION DE PIEDRAS" },
+        "P.14": { "t": "SEÑALES PREVENTIVAS", "d": "DERRUMBES" },
+        "P.15": { "t": "SEÑALES PREVENTIVAS", "d": "TUNEL" },
+        "P.16": { "t": "SEÑALES PREVENTIVAS", "d": "PUENTE ANGOSTO" },
+        "P.17": { "t": "SEÑALES PREVENTIVAS", "d": "PUENTE MOVIL" },
+        "P.18": { "t": "SEÑALES PREVENTIVAS", "d": "ALTURA LIMITADA" },
+        "P.19": { "t": "SEÑALES PREVENTIVAS", "d": "ANCHO LIMITADO" },
+        "P.20.a": { "t": "SEÑALES PREVENTIVAS", "d": "PRINCIPIO DE CALZADA DIVIDIDA" },
+        "P.20.b": { "t": "SEÑALES PREVENTIVAS", "d": "FIN DE CALZADA DIVIDIDA" },
+        "P.21": { "t": "SEÑALES PREVENTIVAS", "d": "ROTONDA" },
+        "P.22": { "t": "SEÑALES PREVENTIVAS", "d": "INCORPORACION DE TRANSITO LATERAL" },
+        "P.23": { "t": "SEÑALES PREVENTIVAS", "d": "INICIO DOBLE DE SENTIDO DE CIRCULACION" },
+        "P.24.a": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (CRUCE)" },
+        "P.24.b": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (EMPALME LATERAL)" },
+        "P.24.c": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (EMPALME EN Y)" },
+        "P.24.d": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (EMPALME EN T)" },
+        "P.24.e": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (CRUCE) FERROVIAL EN GIRO" },
+        "P.24.f": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (EMPALME) EN CRUCE FERROVIAL EN GIRO" },
+        "P.24.g": { "t": "SEÑALES PREVENTIVAS", "d": "ENCRUCIJADA (BIFURCACION) EN CRUCE FERROVIAL EN GIRO" },
+        "P.24.h": { "t": "SEÑALES PREVENTIVAS", "d": "RIESGO DE ATASCAMIENTO DE VEHICULOS LARGOS EN CRUCE FERROVIAL" },
+        "P.25.a": { "t": "SEÑALES PREVENTIVAS", "d": "ESCOLARES" },
+        "P.25.b": { "t": "SEÑALES PREVENTIVAS", "d": "NIÑOS JUGANDO" },
+        "P.26.a": { "t": "SEÑALES PREVENTIVAS", "d": "CICLISTAS" },
+        "P.26.b": { "t": "SEÑALES PREVENTIVAS", "d": "JINETES" },
+        "P.27.a": { "t": "SEÑALES PREVENTIVAS", "d": "ANIMALES SUELTOS (DOMESTICOS)" },
+        "P.27.b": { "t": "SEÑALES PREVENTIVAS", "d": "ANIMALES SUELTOS (SILVESTRES)" },
+        "P.28": { "t": "SEÑALES PREVENTIVAS", "d": "CORREDOR AEREO" },
+        "P.29.a": { "t": "SEÑALES PREVENTIVAS", "d": "PRESENCIA DE VEHICULOS EXTRAÑOS (TRANVIA O TROLEBUS)" },
+        "P.29.b": { "t": "SEÑALES PREVENTIVAS", "d": "PRESENCIA DE VEHICULOS EXTRAÑOS (AMBULANCIA)" },
+        "P.30.a": { "t": "SEÑALES PREVENTIVAS", "d": "SITUACIONES CLIMATICAS ADVERSAS (VIENTOS LATERALES)" },
+        "P.31.a1": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (HACIA LA DERECHA)" },
+        "P.31.a2": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (HACIA LA IZQUIERDA)" },
+        "P.31.b": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (HACIA AMBOS LADOS)" },
+        "P.31.c1": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (PANEL CHEVRON MULTIPLE)" },
+        "P.31.c2": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (PANEL CHEVRON MULTIPLE)" },
+        "P.31.d1": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (PANEL CHEVRON SIMPLE)" },
+        "P.31.d2": { "t": "SEÑALES PREVENTIVAS", "d": "FLECHA DIRECCIONAL (PANEL CHEVRON SIMPLE)" },
+        "P.32": { "t": "SEÑALES PREVENTIVAS", "d": "PROXIMIDAD DE SEMAFORO" },
+        "P.33.a": { "t": "SEÑALES PREVENTIVAS", "d": "PROXIMIDAD DE SEÑAL PRESCRIPTIVA (DE PRIORIDAD)" },
+        "P.33.b": { "t": "SEÑALES PREVENTIVAS", "d": "PROXIMIDAD DE SEÑAL PRESCRIPTIVA (DE PRIORIDAD)" },
+        "P.33.c": { "t": "SEÑALES PREVENTIVAS", "d": "PROXIMIDAD DE SEÑAL PRESCRIPTIVA (DE PROHIBICION)" },
+        "P.33.d": { "t": "SEÑALES PREVENTIVAS", "d": "PROXIMIDAD DE SEÑAL PRESCRIPTIVA (DE RESTRICCION)" },
+        "P.34.a": { "t": "SEÑALES PREVENTIVAS", "d": "FIN DE PREVENCION (CALZADA RESBALADIZA)" },
+        "P.34.b": { "t": "SEÑALES PREVENTIVAS", "d": "FIN DE PREVENCION (DERRUMBES)" },
+        "I.1": { "t": "NOMENCLATURA VIA Y URBANA", "d": "RUTA PANAMERICANA" },
+        "I.2": { "t": "NOMENCLATURA VIA Y URBANA", "d": "RUTA NACIONAL" },
+        "I.3": { "t": "NOMENCLATURA VIA Y URBANA", "d": "RUTA PROVINCIAL" },
+        "I.4": { "t": "NOMENCLATURA VIA Y URBANA", "d": "NOMENCLATURA URBANA" },
+        "I.5": { "t": "NOMENCLATURA VIA Y URBANA", "d": "IDENTIFICACION DE REGIONES Y LOCALIDADES" },
+        "I.6/7": { "t": "NOMENCLATURA VIA Y URBANA", "d": "ORIENTACION" },
+        "I.8": { "t": "NOMENCLATURA VIA Y URBANA", "d": "COMIENZO O FIN DE ZONA URBANA" },
+        "I.9": { "t": "NOMENCLATURA VIA Y URBANA", "d": "IDENTIFICACION DE JURISDICCION O ACCIDENTE GEOGRAFICO" },
+        "I.10": { "t": "NOMENCLATURA VIA Y URBANA", "d": "MOJON KILOMETRICO" },
+        "I.11": { "t": "NOMENCLATURA VIA Y URBANA", "d": "NOMENCLATURA DE AUTOPISTA" },
+        "I.12": { "t": "NOMENCLATURA VIA Y URBANA", "d": "COMIENZO DE AUTOPISTA" },
+        "I.13": { "t": "NOMENCLATURA VIA Y URBANA", "d": "FIN DE AUTOPISTA" },
+        "I.14": { "t": "NOMENCLATURA VIA Y URBANA", "d": "INDICADORA DE UTILIZACION DE CARRILES" },
+        "I.15": { "t": "NOMENCLATURA VIA Y URBANA", "d": "CAMINO O CALLE SIN SALIDA" },
+        "I.16": { "t": "NOMENCLATURA VIA Y URBANA", "d": "CAMINO O PASO TRANSITABLE" },
+        "I.17": { "t": "NOMENCLATURA VIA Y URBANA", "d": "VELOCIDADES MAXIMAS PERMITIDAS" },
+        "I.18": { "t": "NOMENCLATURA VIA Y URBANA", "d": "ESQUEMA DE RECORRIDO" },
+        "I.19": { "t": "NOMENCLATURA VIA Y URBANA", "d": "DESVIO POR CAMBIO DE SENTIDO DE CIRCULACION" },
+        "I.20": { "t": "NOMENCLATURA VIA Y URBANA", "d": "ESTACIONAMIENTO PERMITIDO" },
+        "I.21": { "t": "NOMENCLATURA VIA Y URBANA", "d": "PERMITIDO GIRAR A LA IZQUIERDA/DERECHA" },
+        "I.22": { "t": "NOMENCLATURA VIA Y URBANA", "d": "DIRECCIONES PERMITIDAS" },
+        "X1": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "PUESTO SANITARIO" },
+        "X2": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "SERVICIO TELEFONICO" },
+        "X3": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "TELESFERICO" },
+        "X4": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "SERVICIO MECANICO" },
+        "X5": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "BALNEARIO" },
+        "X6": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "LUGAR PARA RECREACION Y DESCANSO" },
+        "X7": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "HOTEL" },
+        "X8": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "BAR" },
+        "X9": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "CAMPAMENTO" },
+        "X10": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "RESTAURANTE" },
+        "X11": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "AEROPUERTO" },
+        "X12": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "GOMERIA" },
+        "X13": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "ESTACIONAMIENTO" },
+        "X14": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "PUNTO PANORAMICO" },
+        "X15": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "PLAZA" },
+        "X16": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "CORREO" },
+        "X17": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "ESTACIONAMIENTO DE CASA RODANTE" },
+        "X18": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "MUSEO" },
+        "X19": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "POLICIA" },
+        "X20": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "ZONA DETENCION TRANSPORTE PUBLICO DE PASAJEROS" },
+        "X21": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "TAXI" },
+        "X22": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "TERMINAL DE ONMIBUS" },
+        "X23": { "t": "INFORMACION TURISTICA Y SERVICIO", "d": "ESTACION DE FERROCARRIL" },
+        "X24": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "DESTRUIR ES DELITO" },
+        "X25": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "EVITE ENCANDILAR" },
+        "X26": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "NO SE ADELANTE SIN ADVERTIR" },
+        "X27": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "TRANSITE DENTRO DE SU CARRIL" },
+        "X28": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "NO ADELANTARSE EN CURVAS Y PUENTES" },
+        "X29": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "ADELANTARSE POR LA IZQUIERDA" },
+        "X30": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "EVITE ACCIDENTES ESTACIONE LEJOS DE LA CALZADA" },
+        "X31": { "t": "EDUCATIVAS Y ANUNCIOS ESPECIALES", "d": "RESPETE LAS SEÑALES" }
     };
 
-    function toggleEdit() {
-        editando = !editando;
-        const wrapper = document.getElementById('mainWrapper');
-        const btn = document.getElementById('btnModo');
-        const btnAdd = document.getElementById('btnAdd');
-        const btnDelete = document.getElementById('btnDelete');
-        const txt = document.getElementById('txtModo');
-        
-        wrapper.classList.toggle('edit-mode');
-        btn.innerText = editando ? "Guardar Cambios" : "Modo Edición";
-        btn.classList.toggle('active');
-        
-        btnAdd.style.display = editando ? "inline-block" : "none";
-        btnDelete.style.display = editando ? "inline-block" : "none";
-        
-        txt.innerText = editando ? "EDICIÓN ACTIVA" : "MODO LECTURA";
-        txt.style.color = editando ? "var(--danger)" : "var(--bronze)";
+    let modoEdicion = false;
+    let datosModificados = false;
+    let archivosCargados = {};
+    let idFila = 0;
 
-        document.querySelectorAll('.field-input, select, .ch-row').forEach(i => i.disabled = !editando);
+    function toggleEditar() {
+        modoEdicion = !modoEdicion;
+        const btn = document.getElementById('btnEditar');
+        const btnAdd = document.getElementById('btnAgregar');
+        const btnDel = document.getElementById('btnEliminar');
+        const ind = document.getElementById('indicadorModo');
+        const inputs = document.querySelectorAll('#cuerpoTabla input, #cuerpoTabla select');
+
+        if(modoEdicion) {
+            btn.innerText = "GUARDAR";
+            ind.innerText = "EDICIÓN ACTIVA";
+            ind.style.color = "#f87171";
+            btnAdd.style.display = "inline-block";
+            btnDel.style.display = "inline-block";
+            inputs.forEach(i => i.disabled = false);
+        } else {
+            btn.innerText = "EDITAR";
+            ind.innerText = "LECTURA";
+            ind.style.color = "var(--bronze)";
+            btnAdd.style.display = "none";
+            btnDel.style.display = "none";
+            inputs.forEach(i => i.disabled = true);
+            datosModificados = false;
+        }
     }
 
     function agregarFila() {
-        const tbody = document.getElementById('listaCuerpo');
+        idFila++;
+        const tbody = document.querySelector('#tablaVertical tbody');
         const tr = document.createElement('tr');
+        tr.dataset.id = idFila;
         tr.innerHTML = `
-            <td><input type="checkbox" class="ch-row"></td>
-            <td><input type="date" class="field-input" value="${new Date().toISOString().split('T')[0]}"></td>
-            <td><input type="text" class="field-input" placeholder="Ej: R.27" oninput="autoFill(this)"></td>
-            <td><input type="text" class="field-input v-tipo" readonly style="color:var(--bronze); font-weight:bold;"></td>
-            <td><input type="text" class="field-input v-desc" placeholder="Descripción de la señal..."></td>
+            <td><input type="checkbox" class="row-sel" style="width:18px; height:18px;"></td>
+            <td><input type="date" value="${new Date().toISOString().split('T')[0]}" onchange="marcar()"></td>
+            <td><input type="text" class="v-cod" placeholder="R.27" oninput="validarCodigo(this)"></td>
+            <td><input type="text" class="v-tipo" readonly style="color:var(--bronze); font-weight:bold;"></td>
+            <td><input type="text" class="v-desc" readonly style="text-align:left"></td>
             <td>
-                <select>
+                <select onchange="marcar()">
                     <option>DERECHA</option>
                     <option>IZQUIERDA</option>
-                    <option>CANTERO CENTRAL</option>
+                    <option>S/CANTERO</option>
+                    <option>S/ISLETA</option>
                 </select>
             </td>
             <td>
-                <select>
+                <select onchange="marcar()">
                     <option value="Nuevo">Nuevo</option>
                     <option value="Buen estado">Buen estado</option>
                     <option value="Mal estado">Mal estado</option>
                     <option value="No se encuentra">No se encuentra</option>
                 </select>
             </td>
+            <td>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                    <button class="ojo" onclick="verDocumento(${idFila})">👁️ Ver</button>
+                    <input type="file" accept="image/*, .pdf" style="font-size:0.65rem; width:110px;" onchange="cargarArchivo(this, ${idFila})">
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
-        datosModificados = true;
-        if(!editando) {
-            tr.querySelectorAll('.field-input, select, .ch-row').forEach(i => i.disabled = true);
+        marcar();
+        tr.querySelectorAll('input, select').forEach(i => i.disabled = !modoEdicion);
+    }
+
+    function marcar() { if(modoEdicion) datosModificados = true; }
+
+    function validarCodigo(el) {
+        const cod = el.value.toUpperCase().trim();
+        const fila = el.closest('tr');
+        if(catalogoIRAM[cod]) {
+            fila.querySelector('.v-tipo').value = catalogoIRAM[cod].t;
+            fila.querySelector('.v-desc').value = catalogoIRAM[cod].d;
+        } else {
+            fila.querySelector('.v-tipo').value = "";
+            fila.querySelector('.v-desc').value = "";
+        }
+        marcar();
+    }
+
+    function cargarArchivo(input, id) {
+        const btnOjo = input.closest('td').querySelector('.ojo');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) { 
+                archivosCargados[id] = { src: e.target.result, name: input.files[0].name, type: input.files[0].type }; 
+                btnOjo.style.display = "inline-block";
+                marcar();
+            };
+            reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function autoFill(input) {
-        const cod = input.value.toUpperCase().trim();
-        const fila = input.closest('tr');
-        if(catalogo[cod]) {
-            fila.querySelector('.v-tipo').value = catalogo[cod].t;
-            fila.querySelector('.v-desc').value = catalogo[cod].d;
+    function verDocumento(id) {
+        if (archivosCargados[id]) {
+            const fileData = archivosCargados[id];
+            const win = window.open("");
+            if (fileData.type.startsWith('image/')) {
+                win.document.write(`<body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh;"><img src="${fileData.src}" style="max-width:100%; max-height:100%;"></body>`);
+            } else {
+                win.document.write(`<body style="margin:0; height:100vh;"><iframe src="${fileData.src}" frameborder="0" style="width:100%; height:100%;" allowfullscreen></iframe></body>`);
+            }
         }
-        datosModificados = true;
     }
 
     function eliminarFilas() {
-        if (!editando) return; 
-        
-        const seleccionados = document.querySelectorAll('.ch-row:checked');
-        if(seleccionados.length === 0) {
-            alert("Por favor, seleccione las filas que desea eliminar usando la casilla 'Sel.'");
-            return;
-        }
-        
-        if(confirm(`¿Está seguro que desea eliminar los ${seleccionados.length} registros seleccionados?`)) {
-            seleccionados.forEach(cb => cb.closest('tr').remove());
+        if(!modoEdicion) return;
+        const sel = document.querySelectorAll('.row-sel:checked');
+        if(sel.length === 0) return alert("Seleccione registros.");
+        if(confirm(`¿Eliminar los ${sel.length} registros seleccionados?`)) {
+            sel.forEach(cb => {
+                const id = cb.closest('tr').dataset.id;
+                delete archivosCargados[id];
+                cb.closest('tr').remove();
+            });
             datosModificados = true;
         }
     }
 
-    function abrirGuia() { document.getElementById('guiaModal').style.display = 'block'; }
-    function cerrarGuia() { document.getElementById('guiaModal').style.display = 'none'; }
-    
-    function volver() {
-        if(editando && datosModificados) {
-            if(!confirm("Tiene modificaciones sin guardar. ¿Desea regresar al panel de control de todas formas?")) return;
+    function salirSistema() { if(confirm("¿Desea salir del sistema S.I.G.I.V.?")) window.location.href = 'index.html'; }
+    function imprimirPlanilla() { window.print(); }
+
+    function confirmarVolver() {
+        if(modoEdicion && datosModificados) {
+            if(!confirm("Tiene modificaciones activas sin guardar. ¿Desea regresar de todos modos?")) return;
         }
         window.location.href = 'control_obra.html';
     }
 
-    window.onload = () => {
-        agregarFila();
-    };
+    window.onload = () => { agregarFila(); };
 </script>
 </body>
 </html>

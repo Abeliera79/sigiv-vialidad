@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>S.I.G.I.V. - Avance Inteligente</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+            --glass: rgba(10, 20, 30, 0.95);
+            --grid-line: rgba(0, 242, 255, 0.1);
+        }
+
+        body {
+            background: #050a10 url('fondo_avance_futurista.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 20px;
+            user-select: none;
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--neon-blue);
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            max-width: 98%; margin: auto;
+        }
+
+        .header-sigiv {
+            text-align: center;
+            font-size: 1.8rem;
+            letter-spacing: 8px;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin: 0 0 20px 0;
+        }
+
+        .menu-bar {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            padding: 12px; background: rgba(0,0,0,0.5);
+            border: 1px solid var(--grid-line);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .config-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr;
+            gap: 15px; margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid var(--grid-line); padding: 10px;
+        }
+
+        .info-box label { color: var(--neon-blue); font-size: 0.65rem; font-weight: bold; display: block; }
+        .info-box input { background: transparent; border: none; color: #fff; font-size: 1rem; outline: none; width: 100%; }
+        
+        input:not(:disabled) { border-bottom: 1px solid rgba(0, 242, 255, 0.3); }
+
+        button {
+            padding: 8px 15px; background: transparent;
+            border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s;
+            font-size: 0.7rem;
+        }
+        button:hover:not(:disabled) { background: var(--neon-blue); color: #000; }
+        #btnEditar.active { background: var(--neon-green); color: #000; border-color: var(--neon-green); }
+
+        .km-section { margin-top: 25px; border: 1px solid var(--neon-blue); background: rgba(0,0,0,0.4); }
+        .km-title { background: rgba(0, 242, 255, 0.15); color: var(--neon-blue); padding: 8px 15px; font-weight: bold; font-size: 0.8rem; }
+
+        .table-wrapper { overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        th, td { border: 1px solid var(--grid-line); text-align: center; height: 24px; }
+        
+        th { 
+            background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); 
+            font-size: 0.55rem; width: 40px; 
+            padding: 5px 0;
+        }
+
+        .item-col { 
+            width: 240px; text-align: left; padding-left: 10px; 
+            position: sticky; left: 0; background: #0a141e; 
+            border-right: 2px solid var(--neon-blue); z-index: 5;
+        }
+        .item-col input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 0.75rem; }
+
+        .cell { cursor: pointer; }
+        .marked { background: var(--cell-color) !important; box-shadow: inset 0 0 8px rgba(0,0,0,0.5); }
+
+        @media print {
+            body { background: white !important; color: black !important; }
+            .container { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+            .menu-bar, button { display: none !important; }
+            .info-box { background: transparent !important; border: 1px solid #ccc !important; }
+            .info-box label { color: #333 !important; }
+            .info-box input { color: black !important; }
+            .km-section { border: 1px solid #333 !important; background: transparent !important; page-break-inside: avoid; }
+            .km-title { background: #eee !important; color: black !important; border-bottom: 1px solid #333 !important; }
+            th { background: #f0f0f0 !important; color: black !important; border: 1px solid #aaa !important; }
+            td { border: 1px solid #aaa !important; color: black !important; }
+            .item-col { background: white !important; border-right: 2px solid black !important; }
+            .item-col input { color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="header-sigiv">S.I.G.I.V. - CONTROL DE AVANCE</h1>
+    
+    <div class="menu-bar">
+        <button id="btnEditar" onclick="toggleEdicion()">Editar</button>
+        <button onclick="guardarProgreso()" style="border-color: var(--neon-green); color: var(--neon-green);">Guardar Datos</button>
+        <button onclick="window.print()">Imprimir</button>
+        <button style="margin-left:auto" onclick="botonVolver()">Volver</button>
+    </div>
+
+    <div class="config-grid">
+        <div class="info-box"><label>OBRA / EMPRESA</label><input type="text" id="obraEmpresa" placeholder="..." disabled onchange="registrarCambio()"></div>
+        <div class="info-box"><label>PROG. INICIAL (m)</label><input type="number" id="pIni" value="0" onchange="confirmarYActualizar()" disabled></div>
+        <div class="info-box"><label>PROG. FINAL (m)</label><input type="number" id="pFin" value="1000" onchange="confirmarYActualizar()" disabled></div>
+    </div>
+
+    <div id="contenedorCuadros"></div>
+</div>
+
+<script>
+    let editando = false;
+    let isMouseDown = false;
+    let cambiosSinGuardar = false;
+    const colores = ['#39ff14', '#00f2ff', '#ff0055', '#ffcc00', '#cc00ff', '#0066ff', '#ff6600', '#00ffcc', '#ffffff', '#00ff99', '#39ff14', '#00f2ff', '#ff0055', '#ffcc00', '#cc00ff', '#0066ff', '#ff6600', '#00ffcc', '#ffffff', '#00ff99'];
+
+    window.onload = function() {
+        recuperarProgreso();
+    };
+
+    function registrarCambio() { cambiosSinGuardar = true; }
+
+    function toggleEdicion() {
+        editando = !editando;
+        const btn = document.getElementById('btnEditar');
+        btn.classList.toggle('active', editando);
+        btn.innerText = editando ? "MODO PINTADO ON" : "EDITAR";
+        
+        document.querySelectorAll('input, .item-input').forEach(inp => inp.disabled = !editando);
+    }
+
+    function confirmarYActualizar() {
+        if (document.querySelectorAll('.marked').length > 0) {
+            if (!confirm("¿MODIFICAR PROGRESIVAS LIMPIARÁ LOS DATOS ACTUALES?\n¿Desea continuar?")) {
+                const viejoDatos = JSON.parse(localStorage.getItem('datosPlanillaAvanceIntel'));
+                if(viejoDatos) {
+                    document.getElementById('pIni').value = viejoDatos.pIni || 0;
+                    document.getElementById('pFin').value = viejoDatos.pFin || 1000;
+                }
+                return;
+            }
+        }
+        registrarCambio();
+        generarPlanilla();
+    }
+
+    function generarPlanilla() {
+        const start = parseInt(document.getElementById('pIni').value) || 0;
+        const end = parseInt(document.getElementById('pFin').value) || 0;
+        const contenedor = document.getElementById('contenedorCuadros');
+        
+        if(end <= start) return;
+
+        contenedor.innerHTML = '';
+        for (let m = start; m < end; m += 500) {
+            contenedor.appendChild(crearTablaTramo(m, Math.min(m + 500, end)));
+        }
+        
+        if(!editando) document.querySelectorAll('input, .item-input').forEach(inp => inp.disabled = true);
+    }
+
+    function crearTablaTramo(start, end) {
+        const div = document.createElement('div');
+        div.className = 'km-section';
+        let html = `<div class="km-title">TRAMO: ${start}m - ${end}m</div><div class="table-wrapper"><table><thead><tr><th class="item-col">ÍTEMS</th>`;
+        for (let i = start; i <= end; i += 12.5) { html += `<th>${i}</th>`; }
+        html += `</tr></thead><tbody>`;
+
+        for (let f = 0; f < 20; f++) {
+            html += `<tr style="--cell-color: ${colores[f]}">
+                <td class="item-col"><input type="text" class="item-input" data-fila="${f}" oninput="sincronizarItems(this)" placeholder="Item..." disabled></td>`;
+            for (let i = start; i <= end; i += 12.5) {
+                html += `<td class="cell" data-p="${i}" data-f="${f}" onmousedown="handleMouseDown(this)" onmouseover="handleMouseOver(this)"></td>`;
+            }
+            html += `</tr>`;
+        }
+        div.innerHTML = html + `</tbody></table></div>`;
+        return div;
+    }
+
+    function handleMouseDown(celda) { 
+        if (editando) { 
+            isMouseDown = true; 
+            celda.classList.toggle('marked'); 
+            registrarCambio();
+        } 
+    }
+    
+    function handleMouseOver(celda) { 
+        if (editando && isMouseDown) {
+            if(!celda.classList.contains('marked')) {
+                celda.classList.add('marked');
+                registrarCambio();
+            }
+        } 
+    }
+    
+    window.onmouseup = () => isMouseDown = false;
+
+    function sincronizarItems(input) {
+        registrarCambio();
+        const fila = input.getAttribute('data-fila');
+        const valor = input.value;
+        document.querySelectorAll(`.item-input[data-fila="${fila}"]`).forEach(inp => {
+            inp.value = valor;
+        });
+    }
+
+    function guardarProgreso() {
+        const obra = document.getElementById('obraEmpresa').value;
+        const pIni = document.getElementById('pIni').value;
+        const pFin = document.getElementById('pFin').value;
+        
+        // Guardar textos de ítems (0 a 19)
+        let itemsTextos = [];
+        for(let f=0; f<20; f++) {
+            const inputFila = document.querySelector(`.item-input[data-fila="${f}"]`);
+            itemsTextos.push(inputFila ? inputFila.value : '');
+        }
+
+        // Guardar coordenadas de celdas pintadas
+        let celdasMarcadas = [];
+        document.querySelectorAll('.cell.marked').forEach(celda => {
+            celdasMarcadas.push({
+                p: celda.getAttribute('data-p'),
+                f: celda.getAttribute('data-f')
+            });
+        });
+
+        const empaquetado = {
+            obra: obra,
+            pIni: pIni,
+            pFin: pFin,
+            items: itemsTextos,
+            celdas: celdasMarcadas
+        };
+
+        localStorage.setItem('datosPlanillaAvanceIntel', JSON.stringify(empaquetado));
+        cambiosSinGuardar = false;
+        alert("¡Datos de avance guardados con éxito internamente!");
+        
+        if(editando) toggleEdicion();
+    }
+
+    function recuperarProgreso() {
+        const guardado = localStorage.getItem('datosPlanillaAvanceIntel');
+        if(!guardado) {
+            generarPlanilla();
+            return;
+        }
+
+        const datos = JSON.parse(guardado);
+        document.getElementById('obraEmpresa').value = datos.obra || '';
+        document.getElementById('pIni').value = datos.pIni || 0;
+        document.getElementById('pFin').value = datos.pFin || 1000;
+
+        generarPlanilla();
+
+        // Restaurar textos de los ítems
+        if(datos.items && datos.items.length) {
+            datos.items.forEach((texto, f) => {
+                document.querySelectorAll(`.item-input[data-fila="${f}"]`).forEach(inp => {
+                    inp.value = texto;
+                });
+            });
+        }
+
+        // Restaurar celdas marcadas
+        if(datos.celdas && datos.celdas.length) {
+            datos.celdas.forEach(c => {
+                const celdaTarget = document.querySelector(`.cell[data-p="${c.p}"][data-f="${c.f}"]`);
+                if(celdaTarget) celdaTarget.classList.add('marked');
+            });
+        }
+    }
+
+    function botonVolver() {
+        if (cambiosSinGuardar) {
+            if (confirm("¿DESEA SALIR SIN GUARDAR LOS CAMBIOS?")) {
+                window.location.href = 'control_obra.html';
+            }
+        } else {
+            window.location.href = 'control_obra.html';
+        }
+    }
+</script>
+</body>
+</html>

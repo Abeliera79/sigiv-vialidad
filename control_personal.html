@@ -5,55 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.I.G.I.V. - Control de Personal</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a; color: white; overflow-x: hidden;
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #1a1a1a; color: white; overflow-x: hidden; 
         }
-        .background {
-            background-image: url('fondo_personal.jpg');
-            background-size: cover; background-position: center; background-attachment: fixed;
-            min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 0;
+        .background { 
+            background-image: url('fondo_personal.jpg'); background-size: cover; background-position: center; background-attachment: fixed; 
+            min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 0; 
         }
-        .glass-panel {
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px; padding: 30px;
-            width: 95%; max-width: 1200px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
+        .glass-panel { 
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px; padding: 30px; width: 95%; max-width: 1200px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9); 
         }
-        .header-sigiv {
-            text-align: center; border-bottom: 2px solid #ffd700; margin-bottom: 30px;
-            padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
+        .header-sigiv { 
+            text-align: center; border-bottom: 2px solid #ffd700; margin-bottom: 30px; 
+            padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; 
         }
         h1 { color: #ffd700; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 3px; font-size: 1.5rem; }
+        
         .btn { padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: none; font-size: 0.75rem; }
         .btn-edit { background: #ffd700; color: #000; }
         .btn-save { background: #27ae60; color: white; display: none; }
-        .btn-add { background: #2980b9; color: white; margin-right: 5px; }
-        .btn-del { background: #c0392b; color: white; }
-        .edit-active .btn-save { display: inline-block; }
+        .btn-add { background: #2980b9; color: white; margin-right: 5px; display: none; }
+        .btn-del { background: #c0392b; color: white; display: none; }
+        
+        .edit-active .btn-save, .edit-active .btn-add, .edit-active .btn-del { display: inline-block; }
         .edit-active .btn-edit { display: none; }
+        
         .section-box { margin-bottom: 25px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 12px; overflow: hidden; }
         .section-title { background: rgba(255, 215, 0, 0.1); padding: 12px 20px; color: #ffd700; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
-        .btn-action { visibility: hidden; opacity: 0; transition: 0.3s; }
-        .edit-active .btn-action { visibility: visible; opacity: 1; }
+        .btn-action { display: flex; gap: 5px; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th { padding: 10px; color: #aaa; text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid rgba(255,215,0,0.2); }
         td { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
         
-        /* ESTILOS DE INPUT Y SELECT */
-        .field-input { 
-            background: transparent; border: 1px solid transparent; color: white; 
-            width: 90%; padding: 5px; text-align: center; outline: none; border-radius: 4px;
-        }
+        .field-input { background: transparent; border: 1px solid transparent; color: white; width: 90%; padding: 5px; text-align: center; outline: none; border-radius: 4px; }
         .edit-active .field-input { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); }
         
-        /* CORRECCIÓN VISIBILIDAD SELECT */
-        select.field-input { cursor: pointer; }
-        select.field-input option {
-            background-color: white !important;
-            color: black !important;
+        /* Protección estricta de casilleros bloqueados para Microsoft Edge */
+        .field-input:disabled, .row-check:disabled, .check-estado:disabled { 
+            color: #aaa !important; opacity: 0.7 !important; background: transparent !important; border: 1px solid transparent !important; cursor: not-allowed;
         }
-
+        
+        select.field-input option { background-color: white !important; color: black !important; }
+        .total-box { background: rgba(0,0,0,0.3); padding: 10px 20px; font-size: 0.8rem; font-weight: bold; color: #ffd700; text-align: right; }
         .btn-back { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; text-transform: uppercase; }
         .btn-back:hover { background: #ff6b6b; color: white; }
     </style>
@@ -67,8 +64,8 @@
                 <div id="obra-tag" style="color: #ccc; font-size: 0.9rem; margin-top: 5px; text-align: left;">Obra: Cargando...</div>
             </div>
             <div>
-                <button class="btn btn-edit" id="btnEdit" onclick="toggleEdit()">Habilitar Edición</button>
-                <button class="btn btn-save" id="btnSave" onclick="toggleEdit()">Finalizar Edición</button>
+                <button id="btnModoEd" class="btn btn-edit" onclick="toggleEdit()">Habilitar Edición</button>
+                <button id="btnGuardarEd" class="btn btn-save" onclick="guardarYFinalizarPersonal()">Finalizar y Guardar</button>
                 <button class="btn" style="background:#444; color:white; margin-left: 10px;" onclick="window.print()">Imprimir</button>
             </div>
         </div>
@@ -78,11 +75,10 @@
 </div>
 <script>
     let editMode = false;
+    let obraActual = sessionStorage.getItem('obraActual') || "Generica";
     
-    // LISTA ACTUALIZADA DE CARGOS
     const opcionesCargos = [
-        "....", 
-        "Rep. Técnico", "Jefe Obra", "Ayudante Técnico", "Tec. Seg. Higiene", "Proyectista", 
+        "....", "Rep. Técnico", "Jefe Obra", "Ayudante Técnico", "Tec. Seg. Higiene", "Proyectista", 
         "Administrador", "Ayudante Admin.", "Encargado Compras", "Jefe taller", "Mecánico", 
         "Mantenimiento Eq.", "Pañolero", "Chofer", "Maquinista", "Capataz", "Puntero Cuadrilla", 
         "Plantista", "Calderista", "Juntero", "Ayudante", "Sereno",
@@ -90,47 +86,65 @@
     ];
 
     const planillas = [
-        { id: "jefatura", nombre: "Jefatura de Obra" }, 
-        { id: "admin", nombre: "Administración de Obra" }, 
-        { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, 
-        { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, 
-        { id: "hormigon", nombre: "Equipo Hormigón" }, 
-        { id: "cantera", nombre: "Equipo Cantera" }, 
-        { id: "topo", nombre: "Equipo Topografía" }, 
-        { id: "taller", nombre: "Equipo Taller" }, 
-        { id: "planta", nombre: "Equipo Planta de Asfalto" }, 
-        { id: "labo", nombre: "Equipo Laboratorio" }, 
-        { id: "grales", nombre: "Equipo Tareas Generales" }, 
-        { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }
+        { id: "jefatura", nombre: "Jefatura de Obra" }, { id: "admin", nombre: "Administración de Obra" }, 
+        { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, 
+        { id: "hormigon", nombre: "Equipo Hormigón" }, { id: "cantera", nombre: "Equipo Cantera" }, 
+        { id: "topo", nombre: "Equipo Topografía" }, { id: "taller", nombre: "Equipo Taller" }, 
+        { id: "planta", nombre: "Equipo Planta de Asfalto" }, { id: "labo", nombre: "Equipo Laboratorio" }, 
+        { id: "grales", nombre: "Equipo Tareas Generales" }, { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }
     ];
 
     function renderPlanillas() {
         const container = document.getElementById('sectionsContainer');
-        const obraActual = sessionStorage.getItem('obraActual') || "No seleccionada";
         document.getElementById('obra-tag').innerText = "Obra: " + obraActual;
-        
         container.innerHTML = ""; 
+        
         planillas.forEach(p => {
             const div = document.createElement('div');
             div.className = 'section-box';
-            div.innerHTML = '<div class="section-title">' + p.nombre + '<div class="btn-action"><button class="btn btn-add" onclick="addRow(\'' + p.id + '\')">+ Fila</button><button class="btn btn-del" onclick="deleteRows(\'' + p.id + '\')">Eliminar</button></div></div><table><thead><tr><th width="40">Sel.</th><th>Apellido</th><th>Nombre</th><th>Cargo / Especialidad</th><th width="80">Presente</th></tr></thead><tbody id="body-' + p.id + '"></tbody></table><div class="total-box">ACTIVOS EN SECCIÓN: <span id="total-' + p.id + '">0</span></div>';
+            div.innerHTML = `
+                <div class="section-title">${p.nombre}
+                    <div class="btn-action">
+                        <button class="btn btn-add" id="add-${p.id}" onclick="addRow('${p.id}')">+ Fila</button>
+                        <button class="btn btn-del" id="del-${p.id}" onclick="deleteRows('${p.id}')">Eliminar</button>
+                    </div>
+                </div>
+                <table>
+                    <thead><tr><th width="40">Sel.</th><th>Apellido</th><th>Nombre</th><th>Cargo / Especialidad</th><th width="80">Presente</th></tr></thead>
+                    <tbody id="body-${p.id}"></tbody>
+                </table>
+                <div class="total-box">ACTIVOS EN SECCIÓN: <span id="total-${p.id}">0</span></div>`;
             container.appendChild(div);
         });
+        cargarPersonalDesdeStorage();
     }
 
     function toggleEdit() {
         editMode = !editMode;
-        document.getElementById('mainWrapper').classList.toggle('edit-active');
-        document.getElementById('btnEdit').style.display = editMode ? 'none' : 'inline-block';
-        document.getElementById('btnSave').style.display = editMode ? 'inline-block' : 'none';
+        document.getElementById('mainWrapper').classList.toggle('edit-active', editMode);
+        document.getElementById('btnModoEd').style.display = editMode ? 'none' : 'inline-block';
+        document.getElementById('btnGuardarEd').style.display = editMode ? 'inline-block' : 'none';
+        
+        document.querySelectorAll('#sectionsContainer input, #sectionsContainer select').forEach(i => i.disabled = !editMode);
     }
 
-    function addRow(id) {
-        const tbody = document.getElementById('body-' + id);
+    function addRow(sectionId, datos = null) {
+        const tbody = document.getElementById('body-' + sectionId);
         const row = document.createElement('tr');
-        let opts = opcionesCargos.map(o => '<option value="' + o + '">' + o + '</option>').join('');
-        row.innerHTML = '<td><input type="checkbox" class="row-check"></td><td><input type="text" class="field-input" placeholder="Apellido"></td><td><input type="text" class="field-input" placeholder="Nombre"></td><td><select class="field-input">' + opts + '</select></td><td><input type="checkbox" class="check-estado" onchange="countActive(\'' + id + '\')"></td>';
+        const d = datos || { apellido: '', nombre: '', cargo: '....', presente: false };
+        let opts = opcionesCargos.map(o => `<option value="${o}" ${o === d.cargo ? 'selected' : ''}>${o}</option>`).join('');
+
+        const estadoInput = editMode ? '' : 'disabled';
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="row-check" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-apellido" placeholder="Apellido" value="${d.apellido}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-nombre" placeholder="Nombre" value="${d.nombre}" ${estadoInput}></td>
+            <td><select class="field-input v-cargo" ${estadoInput}>${opts}</select></td>
+            <td><input type="checkbox" class="check-estado" onchange="countActive('${sectionId}')" ${d.presente ? 'checked' : ''} ${estadoInput}></td>
+        `;
         tbody.appendChild(row);
+        countActive(sectionId);
     }
 
     function countActive(id) {
@@ -139,24 +153,60 @@
     }
 
     function deleteRows(id) {
+        if(!editMode) return;
         const checks = document.querySelectorAll('#body-' + id + ' .row-check:checked');
-        if(checks.length > 0 && confirm("¿Eliminar?")) {
+        if(checks.length > 0 && confirm("¿Eliminar filas seleccionadas?")) {
             checks.forEach(c => c.closest('tr').remove());
             countActive(id);
         }
     }
 
-    function safeBack() {
-        const destino = 'administracion_obra.html'; 
-        if (editMode) {
-            if (confirm("⚠️ El modo EDICIÓN está activo. ¿Deseas salir?")) {
-                window.location.href = destino;
-            }
-        } else {
-            window.location.href = destino;
-        }
+    // CORRECCIÓN CENTRAL: Esta función empaqueta y escribe los datos físicamente con la firma de la Obra
+    function guardarYFinalizarPersonal() {
+        const listaPersonal = [];
+        planillas.forEach(p => {
+            document.querySelectorAll(`#body-${p.id} tr`).forEach(row => {
+                const apellido = row.querySelector('.v-apellido').value.trim();
+                const nombre = row.querySelector('.v-nombre').value.trim();
+                if (apellido !== "" || nombre !== "") {
+                    listaPersonal.push({
+                        seccion: p.id,
+                        apellido: apellido,
+                        nombre: nombre,
+                        cargo: row.querySelector('.v-cargo').value,
+                        presente: row.querySelector('.check-estado').checked
+                    });
+                }
+            });
+        });
+        
+        const key = 'sigiv_personal_' + obraActual.replace(/\s+/g, '_');
+        localStorage.setItem(key, JSON.stringify(listaPersonal));
+        toggleEdit();
+        alert("Nómina de personal de obra guardada y sincronizada correctamente.");
     }
 
+    function cargarPersonalDesdeStorage() {
+        const key = 'sigiv_personal_' + obraActual.replace(/\s+/g, '_');
+        const guardados = JSON.parse(localStorage.getItem(key));
+        planillas.forEach(p => {
+            document.getElementById('body-' + p.id).innerHTML = '';
+            if (guardados && guardados.length > 0) {
+                const filtrados = guardados.filter(g => g.seccion === p.id);
+                if(filtrados.length > 0) filtrados.forEach(per => addRow(p.id, per));
+                else addRow(p.id);
+            } else { addRow(p.id); }
+            countActive(p.id);
+        });
+    }
+
+    function safeBack() {
+        if (editMode) {
+            if (confirm("⚠️ El modo EDICIÓN está activo. ¿Deseas salir sin guardar los cambios del personal?")) {
+                window.location.href = 'administracion_obra.html';
+            }
+        } else { window.location.href = 'administracion_obra.html'; }
+    }
     renderPlanillas();
 </script>
 </body>

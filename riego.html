@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Riego de Imprimación / Liga</title>
+    <style>
+        :root {
+            --bronze: #A67C52;
+            --glass: rgba(15, 23, 42, 0.85); 
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('riego_imprimacion.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .planilla-container {
+            background: var(--glass); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            position: relative;
+        }
+
+        .btn-cerrar-top {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(153, 27, 27, 0.8); color: white;
+            border: 1px solid #f87171; width: 35px; height: 35px;
+            border-radius: 5px; cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-cerrar-top:hover { background: #991b1b; }
+
+        .menu-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+
+        button.btn-act {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--bronze);
+            color: var(--bronze);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        button.btn-act:hover { background: rgba(166, 124, 82, 0.2); }
+        button.btn-act.active { background: #28a745; border-color: #28a745; color: white; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 15px; }
+        
+        th { 
+            background: rgba(166, 124, 82, 0.5); 
+            color: white; 
+            padding: 10px 2px; 
+            font-size: 0.65rem; 
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+        }
+
+        /* ANCHOS TOTALMENTE CONTROLADOS PARA EVITAR DEFORMACIONES */
+        .col-sel { width: 40px; }
+        .col-fecha { width: 125px; }
+        .col-dato { width: 85px; } 
+        .col-calc { width: 90px; } 
+        .col-calc-dosif { width: 90px; background: rgba(166,124,82,0.1); }
+        .col-obs { width: auto; }
+
+        td { border: 1px solid var(--border); padding: 4px; text-align: center; }
+
+        input, textarea {
+            background: rgba(0,0,0,0.4); 
+            border: none;
+            color: white; 
+            width: 100%; 
+            padding: 5px 3px;
+            box-sizing: border-box;
+            font-size: 0.75rem;
+        }
+
+        input:disabled, textarea:disabled {
+            background: transparent; border: none; color: #eee; opacity: 0.9;
+        }
+
+        .calc-res { font-size: 0.75rem; font-weight: bold; color: #ffd700; }
+    </style>
+</head>
+<body>
+
+<div class="planilla-container">
+    <button class="btn-cerrar-top" onclick="salirSistema()">×</button>
+    
+    <div style="border-bottom: 2px solid var(--bronze); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h2 style="color: #ffd700; margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 1.4rem;">RIEGO DE IMPRIMACIÓN / LIGA</h2>
+            <p style="color: #94a3b8; font-size: 0.7rem; margin: 5px 0 10px 0; font-weight: bold;">S.I.G.I.V. - CONTROL DE ASFALTOS</p>
+        </div>
+        <div style="color: #ffd700; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px;">
+            MODO: <span id="indicadorModo">LECTURA</span>
+        </div>
+    </div>
+
+    <div class="menu-bar">
+        <button id="btnEditar" class="btn-act" onclick="toggleEdicion()">Editar</button>
+        <button id="btnAgregar" class="btn-act" style="display: none;" onclick="agregarFila()">Agregar Fila</button>
+        <button class="btn-act" style="background: rgba(127, 29, 29, 0.6); border-color: #f87171; color: #f87171;" onclick="eliminarFilas()">Eliminar</button>
+        <button class="btn-act" onclick="imprimirPlanilla()">Imprimir</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table id="tablaRiego">
+            <thead>
+                <tr>
+                    <th class="col-sel">Sel.</th>
+                    <th class="col-fecha">Fecha</th>
+                    <th class="col-dato">Prog. Ini</th>
+                    <th class="col-dato">Prog. Fin</th>
+                    <th class="col-calc">Metros Lin.</th>
+                    <th class="col-dato">Ancho (m)</th>
+                    <th class="col-calc">M2</th>
+                    <th class="col-dato">Lect. Ini</th>
+                    <th class="col-dato">Lect. Fin</th>
+                    <th class="col-calc">Litros Tot.</th>
+                    <th class="col-calc-dosif">Ltrs/M2</th>
+                    <th class="col-obs">Observación</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button class="btn-act" style="border-color: #ff6b6b; color: #ff6b6b;" onclick="confirmarVolver()">VOLVER</button>
+    </div>
+</div>
+
+<script>
+    let editando = false;
+    let cambiosSinGuardar = false;
+
+    // Bloqueo de salida por seguridad
+    window.addEventListener('beforeunload', function (e) {
+        if (cambiosSinGuardar) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    function registrarCambio() { cambiosSinGuardar = true; }
+
+    function toggleEdicion() {
+        const btn = document.getElementById('btnEditar');
+        const btnAdd = document.getElementById('btnAgregar');
+        const ind = document.getElementById('indicadorModo');
+        
+        if (editando) {
+            // EJECUTA ACCIÓN DE GUARDADO AUTOMÁTICO EXCEL/CSV
+            guardarDatosCSV();
+            editando = false;
+            btn.classList.remove('active');
+            btn.innerText = "EDITAR";
+            ind.innerText = "LECTURA";
+            ind.style.color = "#ffd700";
+            btnAdd.style.display = "none";
+        } else {
+            // ENTRA EN MODO EDICIÓN
+            editando = true;
+            btn.classList.add('active');
+            btn.innerText = "GUARDAR CAMBIOS";
+            ind.innerText = "EDICIÓN ACTIVA";
+            ind.style.color = "#28a745";
+            btnAdd.style.display = "inline-block";
+        }
+
+        // Habilitar o deshabilitar campos de texto interactivos
+        document.querySelectorAll('#tablaRiego input, #tablaRiego textarea').forEach(el => {
+            el.disabled = !editando;
+        });
+    }
+
+    function guardarDatosCSV() {
+        const filas = document.querySelectorAll('#tablaRiego tbody tr');
+        if(filas.length === 0) {
+            alert("No hay datos para guardar.");
+            cambiosSinGuardar = false;
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        // Encabezados del CSV estructurados
+        csvContent += "Fecha,Prog_Ini,Prog_Fin,Metros_Lin,Ancho_m,M2,Lect_Ini,Lect_Fin,Litros_Tot,Ltrs_M2,Observacion\n";
+
+        filas.forEach(fila => {
+            const fecha = fila.querySelector('.v-fecha').value;
+            const pini = fila.querySelector('.v-pini').value;
+            const pfin = fila.querySelector('.v-pfin').value;
+            const ml = fila.querySelector('.v-ml').innerText;
+            const ancho = fila.querySelector('.v-ancho').value;
+            const m2 = fila.querySelector('.v-m2').innerText;
+            const lini = fila.querySelector('.v-lini').value;
+            const lfin = fila.querySelector('.v-lfin').value;
+            const ltot = fila.querySelector('.v-ltot').innerText;
+            const dosif = fila.querySelector('.v-dosif').innerText;
+            const obs = fila.querySelector('.v-obs-text').value.replace(/"/g, '""'); // Escapar comillas
+
+            csvContent += `"${fecha}","${pini}","${pfin}","${ml}","${ancho}","${m2}","${lini}","${lfin}","${ltot}","${dosif}","${obs}"\n`;
+        });
+
+        // Crear enlace de descarga veloz
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "registro_riego_imprimacion_liga.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        cambiosSinGuardar = false; 
+        alert("¡Planilla de Riego guardada y descargada exitosamente en formato Excel/CSV!");
+    }
+
+    function agregarFila() {
+        if(!editando) return;
+        const tbody = document.querySelector('#tablaRiego tbody');
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td class="col-sel"><input type="checkbox" class="row-sel" style="transform: scale(1.1);"></td>
+            <td class="col-fecha"><input type="date" class="v-fecha" value="${new Date().toISOString().split('T')[0]}" onchange="registrarCambio()"></td>
+            <td class="col-dato"><input type="number" class="v-pini" oninput="calcularTodo(this)" placeholder="0"></td>
+            <td class="col-dato"><input type="number" class="v-pfin" oninput="calcularTodo(this)" placeholder="0"></td>
+            <td class="calc-res v-ml col-calc">0.00</td>
+            <td class="col-dato"><input type="number" class="v-ancho" step="0.01" oninput="calcularTodo(this)" placeholder="0.00"></td>
+            <td class="calc-res v-m2 col-calc">0.00</td>
+            <td class="col-dato"><input type="number" class="v-lini" oninput="calcularTodo(this)" placeholder="0"></td>
+            <td class="col-dato"><input type="number" class="v-lfin" oninput="calcularTodo(this)" placeholder="0"></td>
+            <td class="calc-res v-ltot col-calc">0.00</td>
+            <td class="calc-res v-dosif col-calc-dosif">0.000</td>
+            <td class="col-obs"><textarea class="v-obs-text" rows="1" oninput="registrarCambio()" placeholder="Anotaciones..."></textarea></td>
+        `;
+        tbody.appendChild(tr);
+        registrarCambio();
+    }
+
+    function calcularTodo(el) {
+        const tr = el.closest('tr');
+        
+        // 1. Metros Lineales
+        const pini = parseFloat(tr.querySelector('.v-pini').value) || 0;
+        const pfin = parseFloat(tr.querySelector('.v-pfin').value) || 0;
+        const ml = Math.abs(pfin - pini);
+        tr.querySelector('.v-ml').innerText = ml.toFixed(2);
+
+        // 2. Metros Cuadrados
+        const ancho = parseFloat(tr.querySelector('.v-ancho').value) || 0;
+        const m2 = ml * ancho;
+        tr.querySelector('.v-m2').innerText = m2.toFixed(2);
+
+        // 3. Litros Totales
+        const lini = parseFloat(tr.querySelector('.v-lini').value) || 0;
+        const lfin = parseFloat(tr.querySelector('.v-lfin').value) || 0;
+        const ltot = Math.abs(lini - lfin);
+        tr.querySelector('.v-ltot').innerText = ltot.toFixed(2);
+
+        // 4. Dosificación (Ltrs/M2)
+        const dosif = m2 > 0 ? ltot / m2 : 0;
+        tr.querySelector('.v-dosif').innerText = dosif.toFixed(3);
+
+        registrarCambio();
+    }
+
+    function eliminarFilas() {
+        if(!editando) return alert("Habilite 'EDITAR' primero.");
+        const sel = document.querySelectorAll('.row-sel:checked');
+        if(sel.length === 0) return alert("Seleccione filas para eliminar.");
+        if(confirm(`¿Desea eliminar las ${sel.length} filas seleccionadas?`)) {
+            sel.forEach(cb => cb.closest('tr').remove());
+            registrarCambio();
+        }
+    }
+
+    function imprimirPlanilla() { window.print(); }
+    
+    function salirSistema() { 
+        if(confirm("¿Salir del sistema S.I.G.I.V.?")) {
+            cambiosSinGuardar = false;
+            window.location.href = 'index.html'; 
+        }
+    }
+
+    function confirmarVolver() {
+        if (cambiosSinGuardar) {
+            if (confirm("¿Desea regresar al menú de control? Los cambios no guardados en esta sesión se perderán.")) {
+                window.location.href = 'control_obra.html'; 
+            }
+        } else {
+            window.location.href = 'control_obra.html';
+        }
+    }
+</script>
+</body>
+</html>

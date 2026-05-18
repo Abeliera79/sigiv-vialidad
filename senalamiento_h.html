@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Señalamiento Horizontal</title>
+    <style>
+        :root {
+            --bronze: #A67C52;
+            --glass: rgba(20, 25, 30, 0.95);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: url('fondo_horizontal.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+
+        .menu-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+
+        button {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--bronze);
+            color: var(--bronze);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        button.active { background: var(--bronze); color: white; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 1800px; }
+
+        th {
+            background: rgba(166, 124, 82, 0.8);
+            color: white;
+            font-size: 0.65rem;
+            padding: 10px 2px;
+            border: 1px solid var(--border);
+        }
+
+       /* ANCHOS ULTRA OPTIMIZADOS */
+        .col-sel { width: 35px; }
+        .col-fecha { width: 115px; }
+        .col-prog { width: 70px; }   /* Ajuste al límite para "Prog. Ini" / "Prog. Fin" */
+        .col-long { width: 70px; background: rgba(166, 124, 82, 0.1); }
+        .col-tipo { width: 110px; }  /* Justo para "Longuitudinal" */
+        .col-det { width: 175px; }   /* Espacio optimizado para las opciones de detalle */
+
+        /* AQUÍ ESTÁN LAS QUE ME PEDISTE REDUCIR: */
+        .col-lin { width: 65px; }    /* Reducido: Espacio mínimo para "Simple" / "Doble" */
+        .col-mat { width: 140px; }   /* Espacio justo para "Caliente premoldeado" */
+        .col-pin { width: 105px; }   /* Reducido: Espacio justo para "Termoplastica" */
+        .col-col { width: 80px; }    /* Reducido: Espacio justo para "Amarillo" o "Blanco" */
+        .col-ref { width: 130px; }   /* Espacio para "Vinila Reflejante" / "Reflexion Tipo Espejo" */
+        .col-est { width: 95px; }    /* Reducido: Espacio justo para "Observacion" */
+
+        .col-img { width: 90px; }
+
+        td { border: 1px solid var(--border); padding: 2px; }
+        
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: white;
+            font-size: 0.8rem;
+            padding: 5px 2px;
+            box-sizing: border-box; /* Evita que los campos empujen las celdas hacia abajo */
+        }
+        
+        option { background: #222; color: white; }
+
+        input:disabled, select:disabled { background: transparent; opacity: 0.8; color: #eee; }
+        
+        .ojito { cursor: pointer; color: var(--bronze); font-size: 1.2rem; display: none; }
+        .adjunto-btn { font-size: 0.7rem; color: #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="menu-bar">
+        <button id="btnEditar" onclick="toggleEdicion()">Editar</button>
+        <button onclick="agregarFila()">Agregar Fila</button>
+        <button onclick="eliminarFilas()">Eliminar</button>
+        <button onclick="confirmarVolver()">Volver</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-sel">Sel.</th>
+                    <th class="col-fecha">Fecha</th>
+                    <th class="col-prog">Prog. Ini</th>
+                    <th class="col-prog">Prog. Fin</th>
+                    <th class="col-long">Longitud</th>
+                    <th class="col-tipo">Tipo</th>
+                    <th class="col-det">Detalle</th>
+                    <th class="col-lin">Nº Líneas</th>
+                    <th class="col-mat">Material</th>
+                    <th class="col-pin">Pintura</th>
+                    <th class="col-col">Color</th>
+                    <th class="col-ref">Microprisma</th>
+                    <th class="col-ref">Reflexión</th>
+                    <th class="col-est">Estado</th>
+                    <th class="col-img">Imagen</th>
+                </tr>
+            </thead>
+            <tbody id="tablaCuerpo"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let editando = false;
+    let cambiosSinGuardar = false;
+    const imagenesCargadas = {}; 
+
+    window.addEventListener('beforeunload', function (e) {
+        if (cambiosSinGuardar) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    function registrarCambio() { cambiosSinGuardar = true; }
+
+    function toggleEdicion() {
+        editando = !editando;
+        const btn = document.getElementById('btnEditar');
+        btn.classList.toggle('active', editando);
+        btn.innerText = editando ? "MODO EDICIÓN ON" : "EDITAR";
+
+        document.querySelectorAll('input, select').forEach(el => {
+            if(!el.classList.contains('col-long-input')) el.disabled = !editando;
+        });
+
+        document.querySelectorAll('.ojito').forEach(o => o.style.display = editando ? 'none' : 'inline-block');
+        document.querySelectorAll('.adjunto-btn').forEach(a => a.style.display = editando ? 'inline-block' : 'none');
+    }
+
+    function calcularLongitud(id) {
+        const ini = parseFloat(document.getElementById('ini-' + id).value) || 0;
+        const fin = parseFloat(document.getElementById('fin-' + id).value) || 0;
+        document.getElementById('long-' + id).value = (fin - ini).toFixed(2);
+        registrarCambio();
+    }
+
+    function previsualizarImagen(input, id) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { 
+                imagenesCargadas[id] = e.target.result; 
+                registrarCambio();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function verImagen(id) {
+        if (imagenesCargadas[id]) {
+            const win = window.open();
+            win.document.write('<img src="' + imagenesCargadas[id] + '" style="max-width:100%">');
+        } else {
+            alert("No hay imagen adjunta.");
+        }
+    }
+
+    function agregarFila() {
+        if(!editando) return alert("Habilite 'EDITAR' primero.");
+        const id = Date.now();
+        const fila = document.createElement('tr');
+        
+        // Se armó la fila usando concatenación estándar para asegurar estabilidad visual
+        fila.innerHTML = '=== TR INICIO ===' +
+            '<td class="col-sel"><input type="checkbox" class="sel-check"></td>' +
+            '<td class="col-fecha"><input type="date" onchange="registrarCambio()"></td>' +
+            '<td class="col-prog"><input type="number" id="ini-' + id + '" oninput="calcularLongitud(' + id + ')" placeholder="0"></td>' +
+            '<td class="col-prog"><input type="number" id="fin-' + id + '" oninput="calcularLongitud(' + id + ')" placeholder="0"></td>' +
+            '<td class="col-long"><input type="text" id="long-' + id + '" class="col-long-input" readonly value="0.00"></td>' +
+            '<td><select onchange="registrarCambio()">' +
+                '<option>Longuitudinal</option><option>Transversal</option><option>Especial</option>' +
+            '</select></td>' +
+            '<td><select onchange="registrarCambio()">' +
+                '<option>Continua</option><option>Discontinua</option><option>Aux. Red. Veloc.</option>' +
+                '<option>Detencion</option><option>Senda Peatonal</option><option>Senda Ciclista</option>' +
+                '<option>Pare</option><option>P(Parada Autotransporte)</option><option>Isleta</option>' +
+                '<option>Estacionamiento</option><option>Niebla</option><option>Sep. Transito</option>' +
+                '<option>Bandas Opticas Sonoras</option>' +
+            '</select></td>' +
+            '<td><select onchange="registrarCambio()"><option>Simple</option><option>Doble</option></select></td>' +
+            '<td><select onchange="registrarCambio()">' +
+                '<option>1 componente</option><option>2 o mas comp.</option>' +
+                '<option>Caliente In-Situ</option><option>Caliente premoldeado</option>' +
+            '</select></td>' +
+            '<td><select onchange="registrarCambio()"><option>Base de agua</option><option>Termoplastica</option></select></td>' +
+            '<td><select onchange="registrarCambio()">' +
+                '<option>Blanco</option><option>Amarillo</option><option>Rojo</option><option>Verde</option><option>Azul</option><option>Negro</option>' +
+            '</select></td>' +
+            '<td><select onchange="registrarCambio()"><option>Vinila Reflejante</option><option>Microesfera</option></select></td>' +
+            '<td><select onchange="registrarCambio()">' +
+                '<option>Reflexion Optima</option><option>Reflexion Difusa</option><option>Reflexion Tipo Espejo</option>' +
+            '</select></td>' +
+            '<td><select onchange="registrarCambio()"><option>C.E.T</option><option>No C.E.T</option><option>Observacion</option></select></td>' +
+            '<td style="text-align:center">' +
+                '<span class="ojito" onclick="verImagen(' + id + ')">👁️</span>' +
+                '<input type="file" class="adjunto-btn" onchange="previsualizarImagen(this, ' + id + ')">' +
+            '</td>';
+            
+        // Limpieza de marcadores de control de texto
+        fila.innerHTML = fila.innerHTML.replace('=== TR INICIO ===', '');
+        
+        document.getElementById('tablaCuerpo').appendChild(fila);
+        registrarCambio();
+    }
+
+    function eliminarFilas() {
+        if(!editando) return alert("Habilite 'EDITAR' primero.");
+        document.querySelectorAll('.sel-check:checked').forEach(c => c.closest('tr').remove());
+        registrarCambio();
+    }
+
+    function confirmarVolver() {
+        if (cambiosSinGuardar) {
+            if (confirm("¿Desea salir? Los cambios no guardados se perderán.")) {
+                window.location.href = 'control_obra.html'; 
+            }
+        } else {
+            window.location.href = 'control_obra.html';
+        }
+    }
+</script>
+</body>
+</html>

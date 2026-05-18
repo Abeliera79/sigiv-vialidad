@@ -8,167 +8,52 @@
         body, html {
             margin: 0; padding: 0; height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: white;
-            overflow-x: hidden;
+            background-color: #1a1a1a; color: white; overflow-x: hidden;
         }
-
         .background {
-            background-image: url('fondo_equipos.jpg');
-            background-size: cover; 
-            background-position: center; 
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start;
-            padding: 40px 0;
+            background-image: url('fondo_equipos.jpg'); background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 0;
         }
-
         .glass-panel {
-            background: rgba(0, 0, 0, 0.75); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 30px;
-            width: 95%;
-            max-width: 1200px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px; padding: 30px; width: 95%; max-width: 1200px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
         }
-
-        /* Cabecera Estilo SIGIV */
-        .header-sigiv {
-            text-align: center;
-            border-bottom: 2px solid #ffd700;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-        }
-
-        h1 {
-            color: #ffd700;
-            font-weight: 800;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-        }
-
-        .obra-tag {
-            color: #e0e0e0;
-            font-size: 1rem;
-            margin-top: 5px;
-            display: block;
-        }
-
-        /* Botonera Superior */
-        .controls-top {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.3s;
-            border: none;
-            font-size: 0.8rem;
-        }
-
+        .header-sigiv { text-align: center; border-bottom: 2px solid #ffd700; margin-bottom: 30px; padding-bottom: 15px; }
+        h1 { color: #ffd700; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 3px; text-shadow: 2px 2px 8px rgba(0,0,0,0.8); }
+        .obra-tag { color: #e0e0e0; font-size: 1rem; margin-top: 5px; display: block; }
+        .controls-top { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: all 0.3s; border: none; font-size: 0.8rem; }
         .btn-edit { background: #ffd700; color: #000; }
         .btn-save { background: #27ae60; color: white; display: none; }
         .btn-add { background: #2980b9; color: white; display: none; }
         .btn-del { background: #c0392b; color: white; display: none; }
         .btn-print { background: #555; color: white; }
-
-        .edit-active .btn-add, 
-        .edit-active .btn-del, 
-        .edit-active .btn-save { display: inline-block; }
+        
+        .edit-active .btn-add, .edit-active .btn-del, .edit-active .btn-save { display: inline-block; }
         .edit-active .btn-edit { display: none; }
-
-        /* Tabla Estilizada */
-        .table-container {
-            overflow-x: auto;
+        
+        table { width: 100%; border-collapse: collapse; color: white; font-size: 0.85rem; }
+        th { background: rgba(255, 215, 0, 0.1); color: #ffd700; padding: 12px; border-bottom: 2px solid #ffd700; text-transform: uppercase; }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        
+        .field-input { background: transparent; border: 1px solid transparent; color: white; width: 95%; padding: 5px; text-align: center; border-radius: 4px; outline: none; }
+        .edit-active .field-input { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 215, 0, 0.3); }
+        
+        /* Bloqueo estricto visual para Edge */
+        .field-input:disabled, .row-check:disabled, .check-activo:disabled { 
+            color: #aaa !important; opacity: 0.7 !important; background: transparent !important; border: 1px solid transparent !important; cursor: not-allowed;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            color: white;
-            font-size: 0.85rem;
-        }
-
-        th {
-            background: rgba(255, 215, 0, 0.1);
-            color: #ffd700;
-            padding: 12px;
-            border-bottom: 2px solid #ffd700;
-            text-transform: uppercase;
-        }
-
-        td {
-            padding: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-        }
-
-        .field-input {
-            background: transparent;
-            border: 1px solid transparent;
-            color: white;
-            width: 95%;
-            padding: 5px;
-            text-align: center;
-            border-radius: 4px;
-        }
-
-        .edit-active .field-input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-        }
-
-        /* Checkbox de Activo */
-        .check-activo {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .total-banner {
-            margin-top: 25px;
-            background: rgba(255, 215, 0, 0.1);
-            padding: 15px;
-            border-radius: 12px;
-            text-align: right;
-            border: 1px solid #ffd700;
-            font-weight: bold;
-            color: #ffd700;
-            font-size: 1.1rem;
-        }
-
-        .btn-back {
-            background: transparent;
-            border: 1px solid #ff6b6b;
-            color: #ff6b6b;
-            padding: 10px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-
+        
+        .check-activo { width: 18px; height: 18px; cursor: pointer; }
+        .total-banner { margin-top: 25px; background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 12px; text-align: right; border: 1px solid #ffd700; font-weight: bold; color: #ffd700; font-size: 1.1rem; }
+        .btn-back { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; }
         .btn-back:hover { background: #ff6b6b; color: white; }
 
         @media print {
             .btn-back, .controls-top, .btn-add, .btn-del, th:first-child, td:first-child { display: none !important; }
             .glass-panel { background: white; color: black; box-shadow: none; }
             h1 { color: black; }
+            input, select { color: black !important; }
         }
     </style>
 </head>
@@ -183,9 +68,9 @@
 
         <div class="controls-top">
             <div>
-                <button class="btn btn-edit" onclick="toggleEdit()">Habilitar Edición</button>
-                <button class="btn btn-save" onclick="toggleEdit()">Finalizar Edición</button>
-                <button class="btn btn-add" onclick="addRow()">+ Agregar</button>
+                <button id="btnModoEd" class="btn btn-edit" onclick="toggleEdit()">Habilitar Edición</button>
+                <button id="btnGuardarEd" class="btn btn-save" onclick="guardarYFinalizar()">Finalizar y Guardar</button>
+                <button class="btn btn-add" onclick="agregarFilaVacia()">+ Agregar</button>
                 <button class="btn btn-del" onclick="deleteRows()">Eliminar</button>
             </div>
             <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
@@ -206,52 +91,51 @@
                         <th width="60">Activo</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
 
-        <div class="total-banner">
-            TOTAL EQUIPOS EN OPERACIÓN: <span id="totalEquipos">0</span>
-        </div>
-
+        <div class="total-banner">TOTAL EQUIPOS EN OPERACIÓN: <span id="totalEquipos">0</span></div>
         <button onclick="safeBack()" class="btn-back">⬅ VOLVER AL PANEL ADMIN</button>
     </div>
 </div>
 
 <script>
     let editMode = false;
+    let obraActual = sessionStorage.getItem('obraActual') || 'Generica';
 
-    // Cargar nombre de obra
     window.onload = function() {
-        const obraActual = sessionStorage.getItem('obraActual');
-        if (obraActual) {
-            document.getElementById('obra-activa').innerText = `Obra: ${obraActual}`;
-        }
-        // Iniciar con 3 filas vacías
-        for(let i=0; i<3; i++) addRow();
+        document.getElementById('obra-activa').innerText = `Obra: ${obraActual}`;
+        cargarEquiposDesdeStorage();
     };
 
     function toggleEdit() {
         editMode = !editMode;
-        document.getElementById('mainWrapper').classList.toggle('edit-active');
+        document.getElementById('mainWrapper').classList.toggle('edit-active', editMode);
+        document.querySelectorAll('#tableBody input').forEach(i => i.disabled = !editMode);
     }
 
-    function addRow() {
+    function agregarFilaVacia(datos = null) {
         const tbody = document.getElementById('tableBody');
         const row = document.createElement('tr');
+        const d = datos || { interno: '', desc: '', marca: '', modelo: '', resp: '', ingreso: '', salida: '', activo: false };
+        
+        // Corrección Edge: Nacer explícitamente deshabilitados si editMode está en false
+        const estadoInput = editMode ? '' : 'disabled';
+
         row.innerHTML = `
-            <td><input type="checkbox" class="row-check"></td>
-            <td><input type="text" class="field-input" placeholder="000"></td>
-            <td><input type="text" class="field-input" placeholder="..."></td>
-            <td><input type="text" class="field-input"></td>
-            <td><input type="text" class="field-input"></td>
-            <td><input type="text" class="field-input"></td>
-            <td><input type="date" class="field-input"></td>
-            <td><input type="date" class="field-input"></td>
-            <td><input type="checkbox" class="check-activo" onchange="updateTotal()"></td>
+            <td><input type="checkbox" class="row-check" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-interno" placeholder="000" value="${d.interno}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-desc" placeholder="..." value="${d.desc}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-marca" value="${d.marca}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-modelo" value="${d.modelo}" ${estadoInput}></td>
+            <td><input type="text" class="field-input v-resp" value="${d.resp}" ${estadoInput}></td>
+            <td><input type="date" class="field-input v-ingreso" value="${d.ingreso}" ${estadoInput}></td>
+            <td><input type="date" class="field-input v-salida" value="${d.salida}" ${estadoInput}></td>
+            <td><input type="checkbox" class="check-activo" onchange="updateTotal()" ${d.activo ? 'checked' : ''} ${estadoInput}></td>
         `;
         tbody.appendChild(row);
+        updateTotal();
     }
 
     function updateTotal() {
@@ -260,6 +144,7 @@
     }
 
     function deleteRows() {
+        if(!editMode) return;
         const checks = document.querySelectorAll('.row-check:checked');
         if(checks.length > 0 && confirm("¿Eliminar equipos seleccionados?")) {
             checks.forEach(c => c.closest('tr').remove());
@@ -267,9 +152,48 @@
         }
     }
 
+    function guardarYFinalizar() {
+        const listaEquipos = [];
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            const interno = row.querySelector('.v-interno').value.trim();
+            const desc = row.querySelector('.v-desc').value.trim();
+            if (interno !== "" || desc !== "") {
+                listaEquipos.push({
+                    interno: interno,
+                    desc: desc,
+                    marca: row.querySelector('.v-marca').value,
+                    modelo: row.querySelector('.v-modelo').value,
+                    resp: row.querySelector('.v-resp').value,
+                    ingreso: row.querySelector('.v-ingreso').value,
+                    salida: row.querySelector('.v-salida').value,
+                    activo: row.querySelector('.check-activo').checked
+                });
+            }
+        });
+        
+        // Sincronización exacta con la clave que lee partes_diarios.html
+        const key = 'sigiv_equipos_' + obraActual.replace(/\s+/g, '_');
+        localStorage.setItem(key, JSON.stringify(listaEquipos));
+        toggleEdit();
+        alert("Flota de equipos sincronizada y guardada con éxito.");
+    }
+
+    function cargarEquiposDesdeStorage() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        const key = 'sigiv_equipos_' + obraActual.replace(/\s+/g, '_');
+        const guardados = JSON.parse(localStorage.getItem(key));
+        if (guardados && guardados.length > 0) {
+            guardados.forEach(eq => agregarFilaVacia(eq));
+        } else {
+            for(let i=0; i<3; i++) agregarFilaVacia();
+        }
+        updateTotal();
+    }
+
     function safeBack() {
         if (editMode) {
-            if (confirm("Está en modo EDICIÓN. ¿Desea salir sin guardar?")) {
+            if (confirm("Está en modo EDICIÓN. ¿Desea salir sin guardar los cambios de flota?")) {
                 window.location.href = 'administracion_obra.html';
             }
         } else {
@@ -277,6 +201,5 @@
         }
     }
 </script>
-
 </body>
 </html>

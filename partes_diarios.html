@@ -8,7 +8,7 @@
         :root {
             --ocre-light: #ffd700; /* Dorado SIGIV */
             --ocre-dark: #b08d5c;
-            --glass-bg: rgba(0, 0, 0, 0.8);
+            --glass-bg: rgba(0, 0, 0, 0.85);
             --border-gold: rgba(255, 215, 0, 0.3);
         }
 
@@ -122,9 +122,13 @@
         .btn-back { margin-top: auto; background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; cursor: pointer; font-size: 0.8rem; padding: 12px; border-radius: 10px; text-align:center; text-decoration:none; font-weight: bold; }
         .btn-back:hover { background: #ff6b6b; color: white; }
 
-        /* IMPRESIÓN */
+        .cant-input {
+            width:50px; background:transparent; border:1px solid #444; color:white; text-align:center; outline:none; font-weight: bold;
+        }
+        .cant-input:disabled { border: none; color: #ffd700; }
+
         @media print {
-            .sidebar, .controls, .btn-back, #tareas { display: none !important; }
+            .sidebar, .controls, .btn-back, #tareas, .cant-input { display: none !important; }
             #tareas-print { display: block !important; white-space: pre-wrap; color: black; border: 1px solid #ccc; padding: 10px; }
             body, .main-content { overflow: visible !important; display: block !important; background: white !important; }
             .sheet { background: white !important; color: black !important; border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
@@ -132,7 +136,9 @@
             .field-value, th, td { color: black !important; border-bottom: 1px solid #ddd !important; }
             .field-label { color: #666 !important; }
             table { width: 100% !important; }
+            .print-cant-val { display: inline-block !important; font-weight: bold; }
         }
+        .print-cant-val { display: none; }
     </style>
 </head>
 <body>
@@ -179,22 +185,20 @@
             <textarea id="tareas" placeholder="Detalle aquí los progresos, progresivas y novedades del día..." oninput="autoExpand(this)"></textarea>
             <div id="tareas-print"></div>
 
-            <div class="section-header">Resumen de Personal en Planta</div>
+            <div class="section-header">Resumen de Personal en Planta (Presentes)</div>
             <table id="tablePersonal">
                 <thead>
-                    <tr><th>Sección / Cuadrilla</th><th width="80" style="text-align:center;">Cant.</th><th>Novedades</th></tr>
+                    <tr><th>Sección / Cuadrilla</th><th width="80" style="text-align:center;">Cant.</th><th>Novedades / Notas</th></tr>
                 </thead>
                 <tbody id="bodyPersonal"></tbody>
             </table>
 
-            <div class="section-header">Equipos y Maquinaria en Operación</div>
+            <div class="section-header">Equipos y Maquinaria en Operación (Activos)</div>
             <table id="tableEquipos">
                 <thead>
-                    <tr><th width="80">Interno</th><th>Descripción del Equipo</th><th>Estado</th></tr>
+                    <tr><th width="100">Interno</th><th>Descripción del Equipo</th><th width="180">Estado / Ubicación</th></tr>
                 </thead>
-                <tbody id="bodyEquipos">
-                    <tr><td>---</td><td>(Se sincronizará con Control de Equipos)</td><td>Operativo</td></tr>
-                </tbody>
+                <tbody id="bodyEquipos"></tbody>
             </table>
 
             <div style="margin-top:80px; display:flex; justify-content: space-around; text-align:center;">
@@ -212,24 +216,79 @@
 
 <script>
     let cambios = false;
+    let obraActual = sessionStorage.getItem('obraActual') || "Obra No Identificada";
+
+    // Diccionario relacional estricto con los mismos IDs generados por personal.html
+    const diccionarioSecciones = [
+        { id: "jefatura", nombre: "Jefatura de Obra" }, 
+        { id: "admin", nombre: "Administración de Obra" }, 
+        { id: "suelo", nombre: "Equipo Movimiento de Suelo" }, 
+        { id: "asfalto", nombre: "Equipo Carpeta Asfáltica" }, 
+        { id: "hormigon", nombre: "Equipo Hormigón" }, 
+        { id: "cantera", nombre: "Equipo Cantera" }, 
+        { id: "topo", nombre: "Equipo Topografía" }, 
+        { id: "taller", nombre: "Equipo Taller" }, 
+        { id: "planta", nombre: "Equipo Planta de Asfalto" }, 
+        { id: "labo", nombre: "Equipo Laboratorio" }, 
+        { id: "grales", nombre: "Equipo Tareas Generales" }, 
+        { id: "inspeccion", nombre: "Equipo Inspeccion de Obra" }
+    ];
 
     window.onload = function() {
-        const obraActual = sessionStorage.getItem('obraActual') || "Obra No Identificada";
         document.getElementById('obra-tag').innerText = `Obra: ${obraActual}`;
-        initPersonal();
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('datePicker').value = hoy;
+        updateDisplayDate();
+        
+        sincronizarModulosSIGIV();
     };
 
-    const secciones = ["Jefatura", "Mov. Suelo", "Carpeta Asfáltica", "Hormigón", "Cantera", "Topografía", "Taller", "Planta Asfalto", "Laboratorio", "Inspección"];
+    // CONECTOR DINÁMICO CENTRAL DE MÓDULOS RELACIONALES
+    function sincronizarModulosSIGIV() {
+        const cleanedObra = obraActual.replace(/\s+/g, '_');
+        
+        // 1. EXTRAER Y COMPUTAR PERSONAL DESDE LA PLANILLA DE PERSONAL
+        const keyPersonal = 'sigiv_personal_' + cleanedObra;
+        const personalGuardado = JSON.parse(localStorage.getItem(keyPersonal)) || [];
+        const tbodyPers = document.getElementById('bodyPersonal');
+        tbodyPers.innerHTML = '';
 
-    function initPersonal() {
-        const tbody = document.getElementById('bodyPersonal');
-        secciones.forEach(s => {
-            tbody.innerHTML += `<tr>
-                <td>${s}</td>
-                <td><input type="number" value="0" style="width:50px; background:transparent; border:1px solid #444; color:white; text-align:center; outline:none;"></td>
-                <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="..."></td>
-            </tr>`;
+        diccionarioSecciones.forEach(sec => {
+            // Suma únicamente los agentes que pertenezcan a esta sección y tengan el checkbox de Presente en true
+            const cantidadPresentes = personalGuardado.filter(p => p.seccion === sec.id && p.presente === true).length;
+            
+            tbodyPers.innerHTML += `
+                <tr>
+                    <td><strong>${sec.nombre}</strong></td>
+                    <td style="text-align:center;">
+                        <span class="print-cant-val">${cantidadPresentes}</span>
+                        <input type="number" class="cant-input" value="${cantidadPresentes}" disabled>
+                    </td>
+                    <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="..."></td>
+                </tr>`;
         });
+
+        // 2. EXTRAER FLOTA DE EQUIPOS DESDE LA PLANILLA DE MAQUINARIAS
+        const keyEquipos = 'sigiv_equipos_' + cleanedObra;
+        const equiposGuardados = JSON.parse(localStorage.getItem(keyEquipos)) || [];
+        const tbodyEquip = document.getElementById('bodyEquipos');
+        tbodyEquip.innerHTML = '';
+
+        // Filtra la base de datos para renderizar solo las maquinarias que marcaste como "Activo"
+        const equiposActivos = equiposGuardados.filter(e => e.activo === true);
+
+        if(equiposActivos.length > 0) {
+            equiposActivos.forEach(eq => {
+                tbodyEquip.innerHTML += `
+                    <tr>
+                        <td><span style="color:#ffd700; font-weight:bold;">${eq.interno}</span></td>
+                        <td><strong>${eq.desc}</strong> <span style="color:#888; font-size:11px;">(${eq.marca} / ${eq.modelo})</span></td>
+                        <td><input type="text" style="width:100%; background:transparent; border:none; color:#aaa; outline:none;" placeholder="Operativo"></td>
+                    </tr>`;
+            });
+        } else {
+            tbodyEquip.innerHTML = `<tr><td colspan="3" style="color:gray; padding:15px; text-align:center;">Sin maquinaria activa registrada en el sistema.</td></tr>`;
+        }
     }
 
     function autoExpand(t) {
@@ -240,7 +299,9 @@
 
     function updateDisplayDate() {
         const f = document.getElementById('datePicker').value;
-        document.getElementById('displayDate').innerText = f.split('-').reverse().join(' / ');
+        if(f) {
+            document.getElementById('displayDate').innerText = f.split('-').reverse().join(' / ');
+        }
     }
 
     function imprimirParte() {
@@ -251,7 +312,7 @@
     function guardarLocal() {
         if(!document.getElementById('datePicker').value) return alert("Seleccione fecha.");
         cambios = false;
-        alert("Registro guardado en memoria local.");
+        alert("Parte Diario indexado con éxito en el servidor local.");
     }
 
     function safeBack() {

@@ -7,8 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
-            --subbase-color: #34495e; /* Color Identidad: Gris Cemento / Azul Vial */
-            --bronze: #00f2ff; /* Neón Azul para destacar en Sub-Base */
+            --subbase-color: #34495e; 
+            --bronze: #00f2ff; 
             --glass: rgba(15, 23, 42, 0.95); 
             --border: rgba(0, 242, 255, 0.2);
             --active-green: #2ecc71; 
@@ -77,7 +77,6 @@
             border-radius: 4px; cursor: pointer; font-weight: bold;
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .btn-eliminar-bloque:hover { background: #e74c3c; color: white; }
 
         .table-responsive { overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; table-layout: fixed; }
@@ -97,23 +96,11 @@
         .diff { font-size: 12px; font-weight: 800; }
         .titulo-input { background: transparent; border: none; border-bottom: 1px solid var(--subbase-color); color: #fff; font-size: 1.1rem; text-align: left; width: 300px; font-weight: bold; }
         .prog-in { background: transparent; border: none; border-bottom: 1px solid var(--subbase-color); color: var(--bronze); font-size: 1.1rem; text-align: center; width: 120px; font-weight: bold; }
-
-        @media print {
-            body { background: white !important; color: black !important; padding: 0; }
-            .btn-bar, .btn-eliminar-bloque, .btn-action, script, style { display: none !important; }
-            .sub-block { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 50px; page-break-inside: avoid; }
-            .titulo-input, .prog-in { color: black !important; border-bottom: none !important; }
-            table { border: 1px solid #000 !important; }
-            td { border: 1px solid #000 !important; color: black !important; }
-            input { color: black !important; background: transparent !important; }
-            .res { background: #eaeaea !important; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
     <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
         <div>
             <h2 style="color: var(--bronze); margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; letter-spacing: 1px;">CONTROL DE NIVELACIÓN SUB-BASE</h2>
@@ -141,14 +128,6 @@
         recuperarDatosMemoria(); 
     };
 
-    window.addEventListener('beforeunload', function (e) {
-        if (cambiosSinGuardar) {
-            e.preventDefault();
-            e.returnValue = ''; 
-        }
-    });
-
-    // Registra cualquier cambio en inputs y ejecuta el auto-guardado en tiempo real
     function registrarCambio() { 
         cambiosSinGuardar = true; 
         guardarDatosEnMemoria(); 
@@ -158,6 +137,7 @@
         isUnlocked = !isUnlocked;
         const btn = document.getElementById("masterLock");
         const btnAdd = document.getElementById("btnAgregar");
+        
         btn.innerText = isUnlocked ? "Modo Edición Activo" : "Sistema Bloqueado";
         btn.className = `btn-status ${isUnlocked ? 'unlocked' : 'locked'}`;
         
@@ -181,7 +161,7 @@
     }
 
     function borrarMemoriaYResetear() {
-        if(confirm("¿Seguro que querés vaciar por completo esta planilla de Sub-Base?\nSe eliminarán de raíz todos los registros guardados.")){
+        if(confirm("¿Seguro que querés vaciar por completo esta planilla de Sub-Base?")){
             localStorage.removeItem('datosTopSubbase');
             cambiosSinGuardar = false;
             location.reload();
@@ -225,7 +205,7 @@
         div.id = id;
 
         div.innerHTML = `
-            <button class="btn-eliminar-bloque" onclick="eliminarBloque('${id}')" style="display:${isUnlocked ? 'flex' : 'none'};">×</button>
+            <button class="btn-eliminar-bloque" onclick="eliminarBloque('${id}')" style="display:none;">×</button>
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; padding-right: 30px;">
                 <div>
                     <b style="color:var(--subbase-color); font-size:0.85rem;">TIPO:</b> 
@@ -248,4 +228,234 @@
                             <td colspan="8" class="header-geom">GEOMETRÍA DE DISEÑO</td>
                         </tr>
                         <tr>
-                            <td style="background:#e8f4fd"><input type="number" step="0.001" class="calc-pv cota-pf-input" value="${cotaInicial}" oninput="calcular('${id}'); registrarCambio();
+                            <td style="background:#e8f4fd"><input type="number" step="0.001" class="calc-pv cota-pf-input" value="${cotaInicial}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" class="calc-pv" value="${inputPvValores[1] || ''}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" class="calc-pv" value="${inputPvValores[2] || ''}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" class="calc-pv" value="${inputPvValores[3] || ''}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" class="calc-pv" value="${inputPvValores[4] || ''}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" class="calc-pv" value="${inputPvValores[5] || ''}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="res pv-final-val" style="font-weight:800;">0.000</td>
+                            <td class="header-geom">% B.I</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[0]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">% C.I</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[1]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">% C.D</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[2]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">% B.D</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[3]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="9"></td>
+                            <td class="header-geom">M. B.I</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[4]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">M. C.I</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[5]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">M. C.D</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[6]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="header-geom">M. B.D</td><td><input type="number" step="0.01" class="calc-geo" value="${geoValores[7]}" oninput="calcular('${id}'); registrarCambio();"></td>
+                        </tr>
+                        <tr style="color:white; background:#2c3e50">
+                            <td colspan="2">PUNTOS</td><td>Banq I.</td><td>Bord I.</td><td>R.I.</td><td style="background:#fff2cc; color:#000;">EJE</td><td>R.D.</td><td>Bord D.</td><td>Banq D.</td>
+                            <td colspan="8" rowspan="5" style="background:rgba(0,0,0,0.05); color:#34495e; font-size:22px; font-weight:900; letter-spacing:4px; text-shadow:1px 1px 0px #fff;">S.I.G.I.V.</td>
+                        </tr>
+                        <tr class="fila-cota-proy">
+                            <td colspan="2" style="background:#bdc3c7">Cota Proy.</td>
+                            <td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td>
+                            <td><input type="number" step="0.001" class="calc-eje" value="${inputEjeValor}" style="background:#fff2cc; color:#000;" oninput="calcular('${id}'); registrarCambio();"></td>
+                            <td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td>
+                        </tr>
+                        <tr class="fila-lect-proy">
+                            <td colspan="2" style="background:#bdc3c7">Lect. Proy.</td>
+                            <td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td><td class="res">0.000</td>
+                        </tr>
+                        <tr class="fila-lect-exist">
+                            <td colspan="2" style="background:#bdc3c7">Lect. Exist.</td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[0] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[1] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[2] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[3] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[4] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[5] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[6] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                        </tr>
+                        <tr class="fila-diferencia">
+                            <td colspan="2" style="background:#bdc3c7">Diferencia</td>
+                            <td class="diff res">0.000</td><td class="diff res">0.000</td><td class="diff res">0.000</td>
+                            <td class="diff res">0.000</td><td class="diff res">0.000</td><td class="diff res">0.000</td><td class="diff res">0.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+        document.getElementById('contenedor-planillas').appendChild(div);
+        actualizarEstadoGlobalInputs();
+        calcular(id);
+        if(!datosPrevios) { registrarCambio(); }
+    }
+
+    function eliminarBloque(id) {
+        if(!isUnlocked) return;
+        const bloque = document.getElementById(id);
+        if(bloque && confirm("¿Desea eliminar esta progresiva?")) {
+            bloque.remove();
+            registrarCambio();
+        }
+    }
+
+    function calcular(id) {
+        const b = document.getElementById(id);
+        if (!b) return;
+        
+        const pvs = b.querySelectorAll('.calc-pv');
+        const cPF = parseFloat(pvs[0].value) || 0;
+        const lPF = parseFloat(pvs[1].value) || 0;
+        const p1 = parseFloat(pvs[2].value) || 0;
+        const p2 = parseFloat(pvs[3].value) || 0;
+        const p3 = parseFloat(pvs[4].value) || 0;
+        const p4 = parseFloat(pvs[5].value) || 0;
+        
+        const pvFinal = (cPF + lPF) - p1 + p2 - p3 + p4;
+        b.querySelector('.pv-final-val').innerText = pvFinal.toFixed(3);
+
+        const todos = Array.from(document.querySelectorAll('.sub-block'));
+        const miIndex = todos.indexOf(b);
+        if (todos[miIndex + 1]) {
+            const sig = todos[miIndex + 1];
+            sig.querySelector('.cota-pf-input').value = pvFinal.toFixed(3);
+            calcular(sig.id); 
+        }
+
+        const geos = b.querySelectorAll('.calc-geo');
+        const eje = parseFloat(b.querySelector('.calc-eje').value) || 0;
+
+        const celdasCota = b.querySelectorAll('.fila-cota-proy td');
+        const celdasLect = b.querySelectorAll('.fila-lect-proy td.res');
+
+        if(eje !== 0) {
+            const pbi = parseFloat(geos[0].value) || 0;
+            const pci = parseFloat(geos[1].value) || 0;
+            const pcd = parseFloat(geos[2].value) || 0;
+            const pbd = parseFloat(geos[3].value) || 0;
+            const mbi = parseFloat(geos[4].value) || 0;
+            const mci = parseFloat(geos[5].value) || 0;
+            const mcd = parseFloat(geos[6].value) || 0;
+            const mbd = parseFloat(geos[7].value) || 0;
+
+            const c_bord_i = eje - (mci * (pci/100));
+            const c_bord_d = eje - (mcd * (pcd/100));
+
+            const cotas = [
+                c_bord_i - (mbi * (pbi/100)), 
+                c_bord_i, 
+                (eje + c_bord_i) / 2, 
+                eje, 
+                (eje + c_bord_d) / 2, 
+                c_bord_d, 
+                c_bord_d - (mbd * (pbd/100))
+            ];
+
+            cotas.forEach((val, i) => {
+                if(i !== 3) celdasCota[i + 1].innerText = val.toFixed(3);
+                celdasLect[i].innerText = (pvFinal - val).toFixed(3);
+            });
+        } else {
+            celdasCota.forEach((td, idx) => { if(idx > 0 && idx !== 4) td.innerText = "0.000"; });
+            celdasLect.forEach(td => td.innerText = "0.000");
+        }
+        calcularDif(id);
+    }
+
+    function calcularDif(id) {
+        const b = document.getElementById(id);
+        if (!b) return;
+        
+        const lProy = b.querySelectorAll('.fila-lect-proy td.res');
+        const lExist = b.querySelectorAll('.fila-lect-exist input');
+        const diffs = b.querySelectorAll('.fila-diferencia .diff');
+
+        lExist.forEach((inp, i) => {
+            const p = parseFloat(lProy[i].innerText) || 0;
+            if (inp.value !== "" && !isNaN(parseFloat(inp.value))) {
+                const e = parseFloat(inp.value);
+                const d = p - e;
+                diffs[i].innerText = d.toFixed(3);
+                diffs[i].style.color = Math.abs(d) <= 0.005 ? "#2ecc71" : "#e74c3c";
+            } else {
+                diffs[i].innerText = "0.000";
+                diffs[i].style.color = "inherit";
+            }
+        });
+    }
+
+    function guardarDatosEnMemoria() {
+        const bloques = document.querySelectorAll('.sub-block');
+        let dataPack = [];
+
+        bloques.forEach(b => {
+            const pvs = b.querySelectorAll('.calc-pv');
+            const geos = b.querySelectorAll('.calc-geo');
+            const lExist = b.querySelectorAll('.fila-lect-exist input');
+            
+            let pvVals = []; pvs.forEach(input => pvVals.push(input.value));
+            let geoVals = []; geos.forEach(input => geoVals.push(input.value));
+            let lExistVals = []; lExist.forEach(input => lExistVals.push(input.value));
+
+            dataPack.push({
+                id: b.id,
+                tituloPrevio: b.querySelector('.titulo-input').value,
+                progValor: b.querySelector('.prog-in').value,
+                cotaInicial: b.querySelector('.cota-pf-input').value,
+                inputPvValores: pvVals,
+                geoValores: geoVals,
+                inputEjeValor: b.querySelector('.calc-eje').value,
+                inputLectExistValores: lExistVals
+            });
+        });
+        localStorage.setItem('datosTopSubbase', JSON.stringify(dataPack));
+    }
+
+    function guardarDatosManual() {
+        guardarDatosEnMemoria();
+        cambiosSinGuardar = false;
+        alert("¡Datos de Sub-Base guardados con éxito!");
+        if(isUnlocked) toggleLock();
+    }
+
+    function recuperarDatosMemoria() {
+        try {
+            const packAlmacenado = localStorage.getItem('datosTopSubbase');
+            if (packAlmacenado) {
+                const dataPack = JSON.parse(packAlmacenado);
+                if(Array.isArray(dataPack) && dataPack.length > 0) {
+                    dataPack.forEach(datosBloque => agregarBloque(datosBloque));
+                    return;
+                }
+            }
+        } catch(err) {
+            localStorage.removeItem('datosTopSubbase');
+        }
+        agregarBloque();
+    }
+
+    async function ejecutarExcel() {
+        guardarDatosEnMemoria();
+        const wb = XLSX.utils.book_new();
+        const bloques = document.querySelectorAll('.sub-block');
+        if(bloques.length === 0) return alert("No hay datos.");
+
+        bloques.forEach((b, idx) => {
+            const data = [];
+            const prog = b.querySelector('.prog-in').value || `P_${idx+1}`;
+            data.push([b.querySelector('.titulo-input').value]);
+            data.push(["PROGRESIVA: " + prog]);
+            data.push([]); 
+
+            b.querySelectorAll('tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    const inp = td.querySelector('input');
+                    row.push(inp ? inp.value : td.innerText);
+                });
+                data.push(row);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), prog.substring(0,30).replace(/[\\/?*\[\]]/g, "_"));
+        });
+        XLSX.writeFile(wb, "Planilla_SIGIV_SubBase.xlsx");
+        cambiosSinGuardar = false;
+    }
+</script>
+</body>
+</html>

@@ -4,18 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.I.G.I.V. - Planilla de Control Sub-Rasante</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root { 
             --subrasante-color: #a0522d; 
             --bronze: #ffd700;
-            --glass: rgba(15, 23, 42, 0.85); 
+            --glass: rgba(15, 23, 42, 0.95); 
             --border: rgba(255, 255, 255, 0.1);
             --active-green: #2ecc71; 
             --locked-red: #e74c3c; 
         }
         
         body { 
-            background: #111 url('fondo_subresante.jpg') no-repeat center center fixed; 
+            background: #111 url('fondo_subrasante.jpg') no-repeat center center fixed; 
             background-size: cover; 
             color: #fff; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -82,7 +83,6 @@
         table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; table-layout: fixed; }
         td { border: 1px solid #bbb; padding: 5px; text-align: center; font-weight: bold; }
         
-        /* Ajustes específicos de anchos de celdas en el cuerpo */
         .w-control { width: 90px; }
         .w-header-pv { width: 80px; }
         
@@ -124,7 +124,8 @@
     <div class="btn-bar">
         <button id="masterLock" class="btn-status locked" onclick="toggleLock()">Sistema Bloqueado</button>
         <button class="btn-action" id="btnAgregar" onclick="agregarBloque()" disabled>+ Agregar Progresiva</button>
-        <button class="btn-action" style="border-color: var(--active-green); color: var(--active-green);" onclick="guardarDatosEnMemoria()">Guardar Cambios</button>
+        <button class="btn-action" style="border-color: #f39c12; color: #f39c12;" onclick="ejecutarGuardado()">Exportar Excel</button>
+        <button class="btn-action" style="border-color: #ff9f43; color: #ff9f43;" onclick="borrarMemoriaYResetear()">Limpiar Tabla</button>
         <button class="btn-action" style="border-color: #ff6b6b; color: #ff6b6b; margin-left: auto;" onclick="confirmarVolver()">Volver</button>
     </div>
 
@@ -178,6 +179,14 @@
         }
     }
 
+    function borrarMemoriaYResetear() {
+        if(confirm("¿Seguro que querés vaciar por completo esta planilla?\nSe eliminarán todos los datos actuales.")){
+            localStorage.removeItem('datosTopSubrasante');
+            cambiosSinGuardar = false;
+            location.reload();
+        }
+    }
+
     function agregarBloque(datosPrevios = null) {
         let id = datosPrevios ? datosPrevios.id : 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
         
@@ -193,7 +202,8 @@
             const bloquesExistentes = document.querySelectorAll('.sub-block');
             if (bloquesExistentes.length > 0) {
                 const ultimoBloque = bloquesExistentes[bloquesExistentes.length - 1];
-                cotaInicial = ultimoBloque.querySelector('.pv-final-val').innerText;
+                const pvFinalElement = ultimoBloque.querySelector('.pv-final-val');
+                cotaInicial = pvFinalElement ? pvFinalElement.innerText : "0.000";
                 tituloPrevio = ultimoBloque.querySelector('.titulo-input').value;
                 ultimoBloque.querySelectorAll('.calc-geo').forEach((el, i) => {
                     geoValores[i] = el.value;
@@ -201,13 +211,13 @@
             }
             registrarCambio();
         } else {
-            cotaInicial = datosPrevios.cotaInicial;
-            geoValores = datosPrevios.geoValores;
-            tituloPrevio = datosPrevios.tituloPrevio;
-            progValor = datosPrevios.progValor;
-            inputPvValores = datosPrevios.inputPvValores;
-            inputEjeValor = datosPrevios.inputEjeValor;
-            inputLectExistValores = datosPrevios.inputLectExistValores;
+            cotaInicial = datosPrevios.cotaInicial || "0.000";
+            geoValores = datosPrevios.geoValores || ["0.00", "0.00", "0.00", "0.00", "0.00", "0.00", "0.00", "0.00"];
+            tituloPrevio = datosPrevios.tituloPrevio || "CONTROL DE SUB RASANTE";
+            progValor = datosPrevios.progValor || "0+000";
+            inputPvValores = datosPrevios.inputPvValores || ["", "", "", "", "", ""];
+            inputEjeValor = datosPrevios.inputEjeValor || "";
+            inputLectExistValores = datosPrevios.inputLectExistValores || ["", "", "", "", "", "", ""];
         }
 
         const div = document.createElement('div');
@@ -273,13 +283,13 @@
                         </tr>
                         <tr class="fila-lect-exist">
                             <td colspan="2" style="background:#bdc3c7">Lect. Exist.</td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[0]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[1]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[2]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[3]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[4]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[5]}" oninput="calcularDif('${id}'); registrarCambio();"></td>
-                            <td><input type="number" step="0.001" value="${inputLectExistValores[6]}" oninput="widerCalcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[0] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[1] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[2] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[3] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[4] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[5] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
+                            <td><input type="number" step="0.001" value="${inputLectExistValores[6] || ''}" oninput="calcularDif('${id}'); registrarCambio();"></td>
                         </tr>
                         <tr class="fila-diferencia">
                             <td colspan="2" style="background:#bdc3c7">Diferencia</td>
@@ -301,8 +311,6 @@
         if(bloque && confirm("¿Desea eliminar esta progresiva por completo?")) {
             bloque.remove();
             registrarCambio();
-            
-            // Re-encadenar cotas iniciales remanentes
             const todos = Array.from(document.querySelectorAll('.sub-block'));
             if(todos.length > 0) {
                 calcular(todos[0].id);
@@ -325,7 +333,6 @@
         const pvFinal = (cPF + lPF) - p1 + p2 - p3 + p4;
         b.querySelector('.pv-final-val').innerText = pvFinal.toFixed(3);
 
-        // Recalcular en cascada secuencial para el bloque siguiente
         const todos = Array.from(document.querySelectorAll('.sub-block'));
         const miIndex = todos.indexOf(b);
         if (todos[miIndex + 1]) {
@@ -369,5 +376,122 @@
                 celdasLect[i].innerText = (pvFinal - val).toFixed(3);
             });
         } else {
-            // Resetear si el eje está vacío
-            celdasCota.forEach((td, idx) => { if(idx > 0 && idx !== 4) td.innerText = "
+            celdasCota.forEach((td, idx) => { if(idx > 0 && idx !== 4) td.innerText = "0.000"; });
+            celdasLect.forEach(td => td.innerText = "0.000");
+        }
+        calcularDif(id);
+    }
+
+    function calcularDif(id) {
+        const b = document.getElementById(id);
+        if (!b) return;
+        
+        const lProy = b.querySelectorAll('.fila-lect-proy td.res');
+        const lExist = b.querySelectorAll('.fila-lect-exist input');
+        const diffs = b.querySelectorAll('.fila-diferencia .diff');
+
+        lExist.forEach((inp, i) => {
+            const p = parseFloat(lProy[i].innerText) || 0;
+            if (inp.value !== "" && !isNaN(parseFloat(inp.value))) {
+                const e = parseFloat(inp.value);
+                const d = p - e;
+                diffs[i].innerText = d.toFixed(3);
+                diffs[i].style.color = Math.abs(d) <= 0.005 ? "#2ecc71" : "#e74c3c";
+            } else {
+                diffs[i].innerText = "0.000";
+                diffs[i].style.color = "inherit";
+            }
+        });
+    }
+
+    function guardarDatosEnMemoria() {
+        const bloques = document.querySelectorAll('.sub-block');
+        let dataPack = [];
+
+        bloques.forEach(b => {
+            const pvs = b.querySelectorAll('.calc-pv');
+            const geos = b.querySelectorAll('.calc-geo');
+            const lExist = b.querySelectorAll('.fila-lect-exist input');
+            
+            let pvVals = [];
+            pvs.forEach(input => pvVals.push(input.value));
+
+            let geoVals = [];
+            geos.forEach(input => geoVals.push(input.value));
+
+            let lExistVals = [];
+            lExist.forEach(input => lExistVals.push(input.value));
+
+            let bloqueData = {
+                id: b.id,
+                tituloPrevio: b.querySelector('.titulo-input').value,
+                progValor: b.querySelector('.prog-in').value,
+                cotaInicial: b.querySelector('.cota-pf-input').value,
+                inputPvValores: pvVals,
+                geoValores: geoVals,
+                inputEjeValor: b.querySelector('.calc-eje').value,
+                inputLectExistValores: lExistVals
+            };
+            dataPack.push(bloqueData);
+        });
+
+        localStorage.setItem('datosTopSubrasante', JSON.stringify(dataPack));
+        cambiosSinGuardar = false;
+    }
+
+    function recuperarDatosMemoria() {
+        try {
+            const packAlmacenado = localStorage.getItem('datosTopSubrasante');
+            const contenedor = document.getElementById('contenedor-planillas');
+            contenedor.innerHTML = "";
+
+            if (packAlmacenado) {
+                const dataPack = JSON.parse(packAlmacenado);
+                if(Array.isArray(dataPack) && dataPack.length > 0) {
+                    dataPack.forEach(datosBloque => {
+                        if(datosBloque) agregarBloque(datosBloque);
+                    });
+                    return;
+                }
+            }
+        } catch(err) {
+            console.error("Error leyendo memoria", err);
+            localStorage.removeItem('datosTopSubrasante');
+        }
+        
+        agregarBloque();
+    }
+
+    async function ejecutarGuardado() {
+        guardarDatosEnMemoria();
+        const wb = XLSX.utils.book_new();
+        const bloques = document.querySelectorAll('.sub-block');
+        
+        if(bloques.length === 0) return alert("No hay datos para exportar.");
+
+        bloques.forEach((b, idx) => {
+            const data = [];
+            const prog = b.querySelector('.prog-in').value || `P_${idx+1}`;
+            const tituloDoc = b.querySelector('.titulo-input').value;
+            
+            data.push([tituloDoc]);
+            data.push(["PROGRESIVA: " + prog]);
+            data.push([]); 
+
+            b.querySelectorAll('tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    const inp = td.querySelector('input');
+                    row.push(inp ? inp.value : td.innerText);
+                });
+                data.push(row);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), prog.substring(0,30).replace(/[\\/?*\[\]]/g, "_"));
+        });
+        XLSX.writeFile(wb, "Planilla_SIGIV_SubRasante.xlsx");
+        
+        if(isUnlocked) toggleLock();
+    }
+</script>
+</body>
+</html>

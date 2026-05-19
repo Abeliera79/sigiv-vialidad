@@ -56,6 +56,16 @@
             font-size: 0.75rem; text-transform: uppercase; transition: all 0.3s;
         }
         button.btn-action:hover:not(:disabled) { background: var(--cordon-orange); box-shadow: 0 0 8px var(--cordon-orange); color: #000; }
+        
+        /* Botón dinámico de fila interna */
+        button.btn-row-add {
+            background: rgba(255, 159, 67, 0.1); color: var(--cordon-orange);
+            border: 1px dashed var(--cordon-orange); padding: 6px 14px; border-radius: 4px;
+            font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase;
+            transition: all 0.2s; margin-top: 10px;
+        }
+        button.btn-row-add:hover:not(:disabled) { background: var(--cordon-orange); color: #000; }
+        
         button:disabled { opacity: 0.2; cursor: not-allowed; }
 
         /* Cuadros de Nivelación Estilo Glassmorphism */
@@ -106,7 +116,7 @@
 
         @media print {
             body { background: white !important; color: black !important; padding: 0; }
-            .btn-bar, .sel-cuadro, script, style { display: none !important; }
+            .btn-bar, .sel-cuadro, .btn-row-add, script, style { display: none !important; }
             .container { max-width: 100%; }
             .cuadro-wrapper { background: transparent !important; border: 1px solid #000 !important; box-shadow: none !important; padding: 15px !important; margin-bottom: 40px; page-break-inside: avoid; }
             .input-group { background: transparent !important; border: none !important; padding: 0 !important; }
@@ -180,8 +190,8 @@
     }
 
     function actualizarEstadoGlobalInputs() {
-        document.querySelectorAll("input:not(.res-field)").forEach(inp => {
-            inp.disabled = !isUnlocked;
+        document.querySelectorAll("input:not(.res-field), button.btn-row-add").forEach(element => {
+            element.disabled = !isUnlocked;
         });
     }
 
@@ -203,7 +213,6 @@
         div.className = 'cuadro-wrapper';
         div.id = `cuadro-${id}`;
 
-        // Valores por defecto o recuperados
         let pfNum = datosPrevios ? datosPrevios.pfNum : "";
         let cotaPf = datosPrevios ? datosPrevios.cotaPf : "";
         let lectAtras = datosPrevios ? datosPrevios.lectAtras : "";
@@ -237,32 +246,36 @@
                         </tr>
                     </thead>
                     <tbody id="body-${id}">
-                        ${generarFilaEstructuras(id, datosPrevios ? datosPrevios.filas : null)}
                     </tbody>
                 </table>
             </div>
+            <button class="btn-row-add" onclick="agregarFilaAFT(${id}, '', '')" ${isUnlocked ? '' : 'disabled'}>+ Agregar Fila</button>
         `;
         contenedor.appendChild(div);
-        if(datosPrevios) { recalcPV(id); }
+
+        if (datosPrevios && datosPrevios.filas && datosPrevios.filas.length > 0) {
+            datosPrevios.filas.forEach(f => agregarFilaAFT(id, f.dist, f.lectExist));
+            recalcPV(id);
+        } else {
+            agregarFilaAFT(id, '', '');
+        }
     }
 
-    function generarFilaEstructuras(cuadroId, datosFilas) {
-        let html = '';
-        for(let i=0; i<10; i++) {
-            let dist = datosFilas && datosFilas[i] ? datosFilas[i].dist : "";
-            let lectExist = datosFilas && datosFilas[i] ? datosFilas[i].lectExist : "";
+    function agregarFilaAFT(cuadroId, distVal, lectExistVal) {
+        const tbody = document.getElementById(`body-${cuadroId}`);
+        if(!tbody) return;
 
-            html += `
-                <tr oninput="recalcCuadro(${cuadroId})">
-                    <td><input type="number" step="0.01" class="cell-input dist-parcial" value="${dist}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'}></td>
-                    <td><input type="text" class="cell-input res-field cota-proy" value="0.000" readonly disabled></td>
-                    <td><input type="text" class="cell-input res-field lect-proy" value="0.000" readonly disabled></td>
-                    <td><input type="number" step="0.001" class="cell-input lect-exist" value="${lectExist}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'}></td>
-                    <td><input type="text" class="cell-input res-field diff" value="0" readonly disabled style="font-weight:800;"></td>
-                </tr>
-            `;
-        }
-        return html;
+        const tr = document.createElement('tr');
+        tr.oninput = () => recalcCuadro(cuadroId);
+        tr.innerHTML = `
+            <td><input type="number" step="0.01" class="cell-input dist-parcial" value="${distVal}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'}></td>
+            <td><input type="text" class="cell-input res-field cota-proy" value="0.000" readonly disabled></td>
+            <td><input type="text" class="cell-input res-field lect-proy" value="0.000" readonly disabled></td>
+            <td><input type="number" step="0.001" class="cell-input lect-exist" value="${lectExistVal}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'}></td>
+            <td><input type="text" class="cell-input res-field diff" value="0" readonly disabled style="font-weight:800;"></td>
+        `;
+        tbody.appendChild(tr);
+        recalcCuadro(cuadroId);
     }
 
     function recalcPV(id) {
@@ -276,8 +289,8 @@
     }
 
     function recalcCuadro(id) {
-        const cuadro = document.getElementById(`cuadro-${id}`);
-        if(!cuadro) return;
+        const tbody = document.getElementById(`body-${id}`);
+        if(!tbody) return;
 
         const cotaIni = parseFloat(document.getElementById(`cota-ini-${id}`).value) || 0;
         const cotaFin = parseFloat(document.getElementById(`cota-fin-${id}`).value) || 0;
@@ -287,7 +300,7 @@
         const pendiente = (cotaIni - cotaFin) / distTot;
         document.getElementById(`pend-${id}`).value = pendiente.toFixed(5);
 
-        const filas = document.getElementById(`body-${id}`).querySelectorAll('tr');
+        const filas = tbody.querySelectorAll('tr');
         let distAcumulada = 0;
 
         filas.forEach((fila) => {
@@ -306,7 +319,6 @@
             if(lectExistInput.value !== "" && lectExist !== 0) {
                 const diff = (lectExist - lectProy) * 1000;
                 outDiff.value = (diff > 0 ? "+" : "") + diff.toFixed(0);
-                // Tolerancia de Obra Civil de Cordones: 10mm
                 outDiff.style.color = Math.abs(diff) > 10 ? '#e74c3c' : '#2ecc71'; 
             } else {
                 outDiff.value = "0";
@@ -335,12 +347,15 @@
             const inputsHeader = cuadro.querySelectorAll('.header-input-field');
             
             let filas = [];
-            cuadro.getElementById(`body-${id}`).querySelectorAll('tr').forEach(tr => {
-                filas.push({
-                    dist: tr.querySelector('.dist-parcial').value,
-                    lectExist: tr.querySelector('.lect-exist').value
+            const tbody = document.getElementById(`body-${id}`);
+            if(tbody) {
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    filas.push({
+                        dist: tr.querySelector('.dist-parcial').value,
+                        lectExist: tr.querySelector('.lect-exist').value
+                    });
                 });
-            });
+            }
 
             dataPack.push({
                 id: id,
@@ -355,19 +370,19 @@
                 filas: filas
             });
         });
-        localStorage.setItem('datosTopCordones', JSON.stringify(dataPack));
+        localStorage.setItem('datosTopCordonesDinamic', JSON.stringify(dataPack));
     }
 
     function guardarDatosManual() {
         guardarDatosEnMemoria();
         cambiosSinGuardar = false;
-        alert("¡Estructuras viales y cotas de cordón guardadas con éxito!");
+        alert("¡Estructuras dinámicas viales guardadas con éxito!");
         if(isUnlocked) toggleLock();
     }
 
     function recuperarDatosMemoria() {
         try {
-            const packAlmacenado = localStorage.getItem('datosTopCordones');
+            const packAlmacenado = localStorage.getItem('datosTopCordonesDinamic');
             if (packAlmacenado) {
                 const dataPack = JSON.parse(packAlmacenado);
                 if(Array.isArray(dataPack) && dataPack.length > 0) {
@@ -376,9 +391,9 @@
                 }
             }
         } catch(err) {
-            localStorage.removeItem('datosTopCordones');
+            localStorage.removeItem('datosTopCordonesDinamic');
         }
-        inyectarCuadroHTML(Date.now(), null); // Iniciar con uno por defecto si está vacío
+        inyectarCuadroHTML(Date.now(), null); 
     }
 
     async function exportarExcel() {
@@ -400,15 +415,18 @@
                 ["DISTANCIA (m)", "COTA PROYECTO", "LECT. PROYECTADA", "LECT. EXISTENTE (Campo)", "DIFERENCIA (mm)"]
             ];
 
-            cuadro.getElementById(`body-${id}`).querySelectorAll('tr').forEach(tr => {
-                data.push([
-                    tr.querySelector('.dist-parcial').value,
-                    tr.querySelector('.cota-proy').value,
-                    tr.querySelector('.lect-proy').value,
-                    tr.querySelector('.lect-exist').value,
-                    tr.querySelector('.diff').value
-                ]);
-            });
+            const tbody = document.getElementById(`body-${id}`);
+            if(tbody) {
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    data.push([
+                        tr.querySelector('.dist-parcial').value,
+                        tr.querySelector('.cota-proy').value,
+                        tr.querySelector('.lect-proy').value,
+                        tr.querySelector('.lect-exist').value,
+                        tr.querySelector('.diff').value
+                    ]);
+                });
+            }
 
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), `PF_${pf}`.substring(0,30).replace(/[\\/?*\[\]]/g, "_"));
         });
@@ -427,7 +445,7 @@
                 await writable.close();
                 archivoNombre = handle.name;
                 cambiosSinGuardar = false;
-                alert("Planilla de cordones guardada exitosamente.");
+                alert("Planilla exportada exitosamente.");
             } catch (e) {}
         } else {
             XLSX.writeFile(wb, "SIGIV_Control_Cordones.xlsx");

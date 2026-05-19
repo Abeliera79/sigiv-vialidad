@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Controles Varios y Adjuntos</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --steel-blue: #607d8b; /* Gris Acero Técnico S.I.G.I.V. */
+            --glass: rgba(10, 14, 20, 0.95);
+            --border: rgba(96, 125, 139, 0.25);
+            --active-green: #2ecc71;
+            --locked-red: #e74c3c;
+        }
+
+        body {
+            background: #0f1319 url('fondo_controlesvarios.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 98%; margin: auto; }
+
+        /* Barra de Herramientas Superior Estilo S.I.G.I.V. */
+        .btn-bar { 
+            position: sticky; 
+            top: 10px; 
+            z-index: 1000; 
+            display: flex; 
+            gap: 12px; 
+            justify-content: flex-start; 
+            background: rgba(0, 0, 0, 0.85); 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-status { 
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; 
+            border: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; font-size: 0.75rem; color: white;
+            transition: all 0.3s ease;
+        }
+        .locked { background: var(--locked-red); }
+        .unlocked { background: var(--active-green); box-shadow: 0 0 15px var(--active-green); color: #000 !important; font-weight: 800; }
+        
+        button.btn-action { 
+            padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; 
+            border: 1px solid var(--steel-blue); background: rgba(0,0,0,0.6); color: white; 
+            font-size: 0.75rem; text-transform: uppercase; transition: all 0.3s;
+        }
+        button.btn-action:hover:not(:disabled) { background: var(--steel-blue); box-shadow: 0 0 8px var(--steel-blue); color: #fff; }
+        button:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        /* Tabla y Contenedores Estilo Glassmorphism */
+        .cuadro-wrapper {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-top: 6px solid var(--steel-blue);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+        table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 12px; table-layout: fixed; }
+        th { background: #2c3e50; color: #fff; padding: 10px; border: 1px solid #bbb; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { border: 1px solid #bbb; padding: 6px; text-align: center; font-weight: bold; }
+
+        /* Inputs de Celdas */
+        .cell-input { width: 100%; background: transparent; border: none; text-align: center; font-weight: bold; color: inherit; outline: none; font-size: 12px; box-sizing: border-box; padding: 4px; }
+        .cell-input:disabled { color: #555 !important; background: transparent !important; }
+        .cell-input:not(:disabled) { background: rgba(0,0,0,0.04); border-radius: 4px; }
+
+        /* Estilos select combo */
+        select.cell-input {
+            cursor: pointer;
+            text-align-last: center;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .estado-cet { color: var(--active-green) !important; }
+        .estado-nocet { color: var(--locked-red) !important; }
+
+        /* Input especial de archivo oculto */
+        .file-hidden { display: none; }
+        
+        /* Botones de acción de celda */
+        .btn-table-action {
+            padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 0.65rem; text-transform: uppercase; cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+        }
+        .btn-attach { background: #f39c12; border-color: #d35400; color: white; }
+        .btn-attach:hover:not(:disabled) { background: #e67e22; }
+        .btn-attach:disabled { display: none !important; } /* Ocultar botón de adjuntar si el sistema está bloqueado */
+
+        .btn-view { background: #3498db; color: white; border-color: #2980b9; font-size: 0.9rem; padding: 3px 10px; }
+        .btn-view:hover { background: #2980b9; box-shadow: 0 0 5px #3498db; }
+
+        .sel-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--steel-blue); }
+
+        @media print {
+            body { background: white !important; color: black !important; padding: 0; }
+            .btn-bar, .sel-check, .btn-attach, .file-hidden, script, style { display: none !important; }
+            .container { max-width: 100%; }
+            .cuadro-wrapper { background: transparent !important; border: 1px solid #000 !important; box-shadow: none !important; padding: 15px !important; }
+            table { border: 1px solid #000 !important; }
+            th { background: #eaeaea !important; color: black !important; border: 1px solid #000 !important; }
+            td { border: 1px solid #000 !important; color: black !important; }
+            .cell-input { color: black !important; background: transparent !important; }
+            select.cell-input { appearance: none; -webkit-appearance: none; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+        <div>
+            <h2 style="color: var(--steel-blue); margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; letter-spacing: 1px;">CONTROLES VARIOS Y PLANILLAS ADJUNTAS</h2>
+            <p style="color: #94a3b8; font-size: 0.7rem; margin: 3px 0 0 0; font-weight: bold; text-transform: uppercase;">S.I.G.I.V. - SEGUIMIENTO DE INFRAESTRUCTURA GENERAL Y REGISTROS</p>
+        </div>
+    </div>
+
+    <div class="btn-bar">
+        <button id="masterLock" class="btn-status locked" onclick="toggleLock()">Sistema Bloqueado</button>
+        <button class="btn-action" id="btnAgregar" onclick="agregarFilaManual()" disabled>+ Agregar Registro</button>
+        <button class="btn-action" id="btnEliminar" style="border-color: #e74c3c; color: #e74c3c;" onclick="eliminarSeleccionados()" disabled>Eliminar Sel.</button>
+        <button class="btn-action" style="border-color: var(--active-green); color: var(--active-green);" onclick="guardarDatosManual()">Guardar Cambios</button>
+        <button class="btn-action" style="border-color: #f39c12; color: #f39c12;" onclick="exportarExcel()">Exportar Excel</button>
+        <button class="btn-action" style="border-color: #ff6b6b; color: #ff6b6b; margin-left: auto;" onclick="confirmarVolver()">Volver</button>
+    </div>
+
+    <div class="cuadro-wrapper">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="5%">Sel.</th>
+                        <th width="15%">FECHA</th>
+                        <th width="45%">DESCRIPCIÓN</th>
+                        <th width="15%">ESTADO</th>
+                        <th width="20%">ADJUNTAR ARCHIVO</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaCuerpo">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isUnlocked = false;
+    let cambiosSinGuardar = false;
+    let baseArchivosMemoria = {}; 
+
+    window.onload = () => { 
+        recuperarDatosMemoria(); 
+    };
+
+    window.addEventListener('beforeunload', function (e) {
+        if (cambiosSinGuardar) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    function registrarCambio() { 
+        cambiosSinGuardar = true; 
+    }
+
+    function toggleLock() {
+        isUnlocked = !isUnlocked;
+        const btn = document.getElementById("masterLock");
+        const btnAdd = document.getElementById("btnAgregar");
+        const btnDel = document.getElementById("btnEliminar");
+        
+        btn.innerText = isUnlocked ? "Modo Edición Activo" : "Sistema Bloqueado";
+        btn.className = `btn-status ${isUnlocked ? 'unlocked' : 'locked'}`;
+        
+        btnAdd.disabled = !isUnlocked;
+        btnDel.disabled = !isUnlocked;
+        actualizarEstadoGlobalInputs();
+    }
+
+    function actualizarEstadoGlobalInputs() {
+        document.querySelectorAll("input:not(.res-field), select.cell-input, button.btn-attach").forEach(element => {
+            element.disabled = !isUnlocked;
+        });
+    }
+
+    function confirmarVolver() {
+        if (cambiosSinGuardar && isUnlocked) {
+            if (!confirm("¿Desea salir sin guardar? Los cambios recientes se perderán.")) return;
+        }
+        window.location.href = 'topografia.html';
+    }
+
+    function agregarFilaManual() {
+        inyectarFilaHTML(Date.now(), '', '', 'C.E.T.', '');
+        registrarCambio();
+    }
+
+    function inyectarFilaHTML(id, fecha, desc, estado, fileNameSaved) {
+        const tbody = document.getElementById('tablaCuerpo');
+        const tr = document.createElement('tr');
+        tr.id = `fila-${id}`;
+
+        tr.innerHTML = `
+            <td><input type="checkbox" class="sel-check" ${isUnlocked ? '' : 'disabled'}></td>
+            <td><input type="text" class="cell-input" value="${fecha}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'} placeholder="DD/MM/AAAA"></td>
+            <td><input type="text" class="cell-input" style="text-align: left;" value="${desc}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'} placeholder="Escriba la descripción del control o ensayo..."></td>
+            <td>
+                <select class="cell-input" onchange="actualizarColorEstado(this); registrarCambio();" ${isUnlocked ? '' : 'disabled'}>
+                    <option value="C.E.T." ${estado === 'C.E.T.' ? 'selected' : ''}>C.E.T.</option>
+                    <option value="No C.E.T." ${estado === 'No C.E.T.' ? 'selected' : ''}>No C.E.T.</option>
+                </select>
+            </td>
+            <td>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center;">
+                    <span id="label-name-${id}" style="font-size:10px; color:#777; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; font-weight:normal;">${fileNameSaved || 'Sin archivo'}</span>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button class="btn-table-action btn-attach" onclick="document.getElementById('file-input-${id}').click()" ${isUnlocked ? '' : 'disabled'}>Adjuntar</button>
+                        <button class="btn-table-action btn-view" id="btn-ver-${id}" title="Ver archivo adjunto" onclick="abrirDocumento('${id}')" ${baseArchivosMemoria[id] ? '' : 'style="display:none;"'}>👁️</button>
+                    </div>
+                </div>
+                <input type="file" id="file-input-${id}" class="file-hidden" onchange="procesarArchivoAdjunto(this, '${id}')">
+            </td>
+        `;
+        tbody.appendChild(tr);
+        actualizarColorEstado(tr.querySelector('select'));
+    }
+
+    function actualizarColorEstado(selectElement) {
+        if(!selectElement) return;
+        selectElement.classList.remove('estado-cet', 'estado-nocet');
+        if(selectElement.value === 'C.E.T.') {
+            selectElement.classList.add('estado-cet');
+        } else {
+            selectElement.classList.add('estado-nocet');
+        }
+    }
+
+    function procesarArchivoAdjunto(input, id) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                baseArchivosMemoria[id] = {
+                    name: file.name,
+                    base64: e.target.result
+                };
+                document.getElementById(`label-name-${id}`).innerText = file.name;
+                document.getElementById(`btn-ver-${id}`).style.display = 'inline-block';
+                registrarCambio();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function abrirDocumento(id) {
+        if (baseArchivosMemoria[id] && baseArchivosMemoria[id].base64) {
+            const win = window.open();
+            if(win) {
+                win.document.write(`<iframe src="${baseArchivosMemoria[id].base64}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`);
+            } else {
+                alert("Por favor, habilite las ventanas emergentes en su navegador.");
+            }
+        } else {
+            alert("No hay ningún documento adjuntado válido.");
+        }
+    }
+
+    function eliminarSeleccionados() {
+        if(!isUnlocked) return;
+        const seleccionados = document.querySelectorAll('.sel-check:checked');
+        if(seleccionados.length === 0) return alert("Seleccione los registros que desea eliminar.");
+        
+        if(confirm(`¿Confirma eliminar ${seleccionados.length} registro(s)?`)) {
+            seleccionados.forEach(check => {
+                const tr = check.closest('tr');
+                const id = tr.id.replace('fila-', '');
+                delete baseArchivosMemoria[id];
+                tr.remove();
+            });
+            registrarCambio();
+        }
+    }
+
+    function guardarDatosEnMemoria() {
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        let dataPack = [];
+
+        filas.forEach(tr => {
+            const id = tr.id.replace('fila-', '');
+            const inputs = tr.querySelectorAll('.cell-input');
+            
+            dataPack.push({
+                id: id,
+                fecha: inputs[0].value,
+                desc: inputs[1].value,
+                estado: inputs[2].value,
+                fileName: baseArchivosMemoria[id] ? baseArchivosMemoria[id].name : '',
+                fileData: baseArchivosMemoria[id] ? baseArchivosMemoria[id].base64 : ''
+            });
+        });
+        localStorage.setItem('datosTopControlesVariosEstructurados', JSON.stringify(dataPack));
+    }
+
+    function guardarDatosManual() {
+        guardarDatosEnMemoria();
+        cambiosSinGuardar = false;
+        alert("¡Cambios y planillas guardados con éxito!");
+        if(isUnlocked) toggleLock();
+    }
+
+    function recuperarDatosMemoria() {
+        try {
+            const packAlmacenado = localStorage.getItem('datosTopControlesVariosEstructurados');
+            if (packAlmacenado) {
+                const dataPack = JSON.parse(packAlmacenado);
+                if(Array.isArray(dataPack) && dataPack.length > 0) {
+                    dataPack.forEach(d => {
+                        if(d.fileData) {
+                            baseArchivosMemoria[d.id] = {
+                                name: d.fileName,
+                                base64: d.fileData
+                            };
+                        }
+                        inyectarFilaHTML(d.id, d.fecha, d.desc, d.estado, d.fileName);
+                    });
+                    return;
+                }
+            }
+        } catch(err) {
+            localStorage.removeItem('datosTopControlesVariosEstructurados');
+            baseArchivosMemoria = {};
+        }
+        for(let i=0; i<3; i++) { inyectarFilaHTML(Date.now() + i, '', '', 'C.E.T.', ''); }
+    }
+
+    function exportarExcel() {
+        guardarDatosEnMemoria();
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        if(filas.length === 0) return alert("No hay datos cargados para exportar.");
+
+        const data = [
+            ["S.I.G.I.V. - REPORTE DE CONTROLES VARIOS"],
+            [],
+            ["FECHA", "DESCRIPCIÓN", "ESTADO", "ARCHIVO ADJUNTO"]
+        ];
+
+        filas.forEach(tr => {
+            const id = tr.id.replace('fila-', '');
+            const inputs = tr.querySelectorAll('.cell-input');
+            data.push([
+                inputs[0].value,
+                inputs[1].value,
+                inputs[2].value,
+                baseArchivosMemoria[id] ? baseArchivosMemoria[id].name : 'Ninguno'
+            ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Controles_Varios");
+        XLSX.writeFile(wb, "SIGIV_Controles_Varios.xlsx");
+        cambiosSinGuardar = false;
+    }
+</script>
+</body>
+</html>

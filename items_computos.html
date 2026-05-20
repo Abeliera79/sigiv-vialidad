@@ -75,8 +75,8 @@
         .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
         table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; }
         
-        th { background: #2c3e50; color: #fff; padding: 8px; border: 1px solid #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
-        .th-mes-header { background: #16a085; color: #fff; }
+        th { background: #2c3e50; color: #fff; padding: 6px 8px; border: 1px solid #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
+        .th-mes-header { background: #16a085; color: #fff; padding: 4px; }
         
         td { border: 1px solid #aaa; padding: 4px; text-align: center; font-weight: bold; }
 
@@ -85,10 +85,15 @@
         .cell-input:disabled { color: #555 !important; background: transparent !important; }
         .cell-input:not(:disabled) { background: rgba(0,0,0,0.04); border-radius: 3px; }
         
+        /* Inputs Especiales para Encabezados de Meses */
+        .head-input { background: rgba(255,255,255,0.15) !important; color: #fff !important; font-size: 11px; border: 1px solid rgba(255,255,255,0.2) !important; border-radius: 4px; margin: 2px 0; padding: 3px; font-weight: bold; text-transform: uppercase; }
+        .head-input:disabled { background: transparent !important; border: none !important; color: #fff !important; }
+        .head-input::placeholder { color: rgba(255,255,255,0.5); }
+
         /* Celdas calculadas o de solo lectura */
         .res-field { background: #f4f6f7 !important; color: #2c3e50 !important; }
-        .restante-alerta { color: #c0392b !important; } /* Resalte si queda remanente */
-        .restante-ok { color: #27ae60 !important; }
+        .restante-alerta { color: #c0392b !important; } 
+        .restante-ok { color: #27ae60 !important; letter-spacing: 0.5px; }
 
         .sel-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--vial-teal); }
 
@@ -101,6 +106,7 @@
             th { background: #eaeaea !important; color: black !important; border: 1px solid #000 !important; }
             td { border: 1px solid #000 !important; color: black !important; }
             .cell-input { color: black !important; background: transparent !important; }
+            .head-input { background: transparent !important; border: none !important; color: black !important; }
             .res-field { background: #eaeaea !important; }
         }
     </style>
@@ -193,17 +199,26 @@
         if (cambiosSinGuardar && isUnlocked) {
             if (!confirm("¿Desea salir sin guardar? Los cambios recientes se perderán.")) return;
         }
-        window.location.href = 'panel_control.html'; // Corregido: Retorno directo al panel de control
+        window.location.href = 'panel_control.html'; 
     }
 
-    function agregarColumnasHeadersMesVisual() {
+    function agregarColumnasHeadersMesVisual(labelMesText = "", labelCertText = "") {
         totalMesesContados++;
         
         const filaHeaderMeses = document.getElementById('filaHeaderMeses');
         const thMes = document.createElement('th');
         thMes.className = `th-mes-header m-head-${totalMesesContados}`;
         thMes.colSpan = 2;
-        thMes.innerText = `MES ${totalMesesContados}`;
+        
+        let deFaultMesLabel = labelMesText || `MES ${totalMesesContados} (MM/AAAA)`;
+        let defaultCertLabel = labelCertText || `Cert. Nº: `;
+
+        thMes.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 3px; align-items: center; width: 90%; margin: auto;">
+                <input type="text" class="cell-input head-input txt-periodo" value="${deFaultMesLabel}" oninput="registrarCambio()" placeholder="MES MM/AAAA" ${isUnlocked ? '' : 'disabled'}>
+                <input type="text" class="cell-input head-input txt-certificado" style="font-size: 10px; background: rgba(0,0,0,0.2) !important;" value="${defaultCertLabel}" oninput="registrarCambio()" placeholder="Cert. Nº" ${isUnlocked ? '' : 'disabled'}>
+            </div>
+        `;
         filaHeaderMeses.appendChild(thMes);
 
         const filaHeaderSub = document.getElementById('filaHeaderSub');
@@ -288,13 +303,17 @@
             const medicionMesActual = parseFloat(inputsMedicion[i].value) || 0;
             acumuladoRestante = acumuladoRestante - medicionMesActual;
 
-            inputsRestante[i].value = acumuladoRestante.toFixed(3);
-
             inputsRestante[i].classList.remove('restante-alerta', 'restante-ok');
-            if (acumuladoRestante > 0) {
-                inputsRestante[i].classList.add('restante-alerta');
-            } else if (acumuladoRestante === 0 && cantidadTotal > 0) {
+
+            // Inyección inteligente de la leyenda de Item Agotado
+            if (acumuladoRestante <= 0 && cantidadTotal > 0) {
+                inputsRestante[i].value = "Item Agotado";
                 inputsRestante[i].classList.add('restante-ok');
+            } else {
+                inputsRestante[i].value = acumuladoRestante.toFixed(3);
+                if (acumuladoRestante > 0) {
+                    inputsRestante[i].classList.add('restante-alerta');
+                }
             }
         }
     }
@@ -314,8 +333,17 @@
 
     function guardarDatosEnMemoria() {
         const filas = document.querySelectorAll('#tablaCuerpo tr');
+        
+        let cabecerasGuardadas = [];
+        document.querySelectorAll('.th-mes-header').forEach(th => {
+            const per = th.querySelector('.txt-periodo').value;
+            const cert = th.querySelector('.txt-certificado').value;
+            cabecerasGuardadas.push({ periodo: per, certificado: cert });
+        });
+
         let dataPack = {
             totalMeses: totalMesesContados,
+            headers: cabecerasGuardadas,
             items: []
         };
 
@@ -346,7 +374,7 @@
     function guardarDatosManual() {
         guardarDatosEnMemoria();
         cambiosSinGuardar = false;
-        alert("¡Cómputos métricos e historial de mediciones guardados!");
+        alert("¡Cómputos métricos, certificados e historial de mediciones guardados!");
         if (isUnlocked) toggleLock();
     }
 
@@ -356,9 +384,12 @@
             if (packAlmacenado) {
                 const dataPack = JSON.parse(packAlmacenado);
                 const mesesAGenerar = dataPack.totalMeses || 0;
+                const headersData = dataPack.headers || [];
                 
                 for (let i = 0; i < mesesAGenerar; i++) {
-                    agregarColumnasHeadersMesVisual();
+                    let pData = headersData[i] ? headersData[i].periodo : "";
+                    let cData = headersData[i] ? headersData[i].certificado : "";
+                    agregarColumnasHeadersMesVisual(pData, cData);
                 }
 
                 if (Array.isArray(dataPack.items) && dataPack.items.length > 0) {
@@ -373,9 +404,8 @@
             totalMesesContados = 0;
         }
         
-        // Carga inicial por defecto
-        agregarColumnasHeadersMesVisual();
-        agregarColumnasHeadersMesVisual();
+        agregarColumnasHeadersMesVisual("MES 1 (MM/AAAA)", "Cert. Nº: ");
+        agregarColumnasHeadersMesVisual("MES 2 (MM/AAAA)", "Cert. Nº: ");
         for (let i = 0; i < 3; i++) { 
             inyectarFilaHTML(Date.now() + i, '', '', '', '', []); 
         }
@@ -387,8 +417,15 @@
         if (filas.length === 0) return alert("No hay registros cargados para exportar.");
 
         let headerRow1 = ["ÍTEM", "DETALLE / DESCRIPCIÓN", "UNIDAD", "CANTIDAD"];
-        for (let m = 1; m <= totalMesesContados; m++) {
-            headerRow1.push(`MEDICIÓN MES ${m}`, `RESTANTE MES ${m}`);
+        
+        const periodosInputs = document.querySelectorAll('.txt-periodo');
+        const certsInputs = document.querySelectorAll('.txt-certificado');
+
+        for (let m = 0; m < totalMesesContados; m++) {
+            let labelP = periodosInputs[m] ? periodosInputs[m].value : `MES ${m+1}`;
+            let labelC = certsInputs[m] ? certsInputs[m].value : `Cert. Nº:`;
+            
+            headerRow1.push(`MEDICIÓN [${labelP} - ${labelC}]`, `RESTANTE [${labelP} - ${labelC}]`);
         }
 
         const data = [

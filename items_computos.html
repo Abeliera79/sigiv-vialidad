@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.I.V. - Ítems Cómputos y Mediciones</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --vial-teal: #16a085; /* Verde Vial Técnico S.I.G.I.V. */
+            --vial-light: #1abc9c;
+            --glass: rgba(10, 15, 20, 0.95);
+            --border: rgba(22, 160, 133, 0.25);
+            --active-green: #2ecc71;
+            --locked-red: #e74c3c;
+        }
+
+        body {
+            background: #0d1214 url('fondo_ruta.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 99%; margin: auto; }
+
+        /* Barra de Herramientas Superior Estilo S.I.G.I.V. */
+        .btn-bar { 
+            position: sticky; 
+            top: 10px; 
+            z-index: 1000; 
+            display: flex; 
+            gap: 12px; 
+            justify-content: flex-start; 
+            background: rgba(0, 0, 0, 0.85); 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-status { 
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; 
+            border: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; font-size: 0.75rem; color: white;
+            transition: all 0.3s ease;
+        }
+        .locked { background: var(--locked-red); }
+        .unlocked { background: var(--active-green); box-shadow: 0 0 15px var(--active-green); color: #000 !important; font-weight: 800; }
+        
+        button.btn-action { 
+            padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; 
+            border: 1px solid var(--vial-teal); background: rgba(0,0,0,0.6); color: white; 
+            font-size: 0.75rem; text-transform: uppercase; transition: all 0.3s;
+        }
+        button.btn-action:hover:not(:disabled) { background: var(--vial-teal); box-shadow: 0 0 8px var(--vial-teal); color: #fff; }
+        button:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        /* Estructura de Cuadro e Ingeniería Vial */
+        .cuadro-wrapper {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-top: 6px solid var(--vial-teal);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+        table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; }
+        
+        th { background: #2c3e50; color: #fff; padding: 8px; border: 1px solid #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
+        .th-mes-header { background: #16a085; color: #fff; }
+        
+        td { border: 1px solid #aaa; padding: 4px; text-align: center; font-weight: bold; }
+
+        /* Control de Entradas de Celdas */
+        .cell-input { width: 100%; background: transparent; border: none; text-align: center; font-weight: bold; color: inherit; outline: none; font-size: 11px; box-sizing: border-box; padding: 4px; }
+        .cell-input:disabled { color: #555 !important; background: transparent !important; }
+        .cell-input:not(:disabled) { background: rgba(0,0,0,0.04); border-radius: 3px; }
+        
+        /* Celdas calculadas o de solo lectura */
+        .res-field { background: #f4f6f7 !important; color: #2c3e50 !important; }
+        .restante-alerta { color: #c0392b !important; } /* Resalte si queda remanente */
+        .restante-ok { color: #27ae60 !important; }
+
+        .sel-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--vial-teal); }
+
+        @media print {
+            body { background: white !important; color: black !important; padding: 0; }
+            .btn-bar, .sel-check, script, style { display: none !important; }
+            .container { max-width: 100%; }
+            .cuadro-wrapper { background: transparent !important; border: 1px solid #000 !important; box-shadow: none !important; padding: 10px !important; }
+            table { border: 1px solid #000 !important; }
+            th { background: #eaeaea !important; color: black !important; border: 1px solid #000 !important; }
+            td { border: 1px solid #000 !important; color: black !important; }
+            .cell-input { color: black !important; background: transparent !important; }
+            .res-field { background: #eaeaea !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+        <div>
+            <h2 style="color: var(--vial-light); margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 800; letter-spacing: 1px;">ÍTEMS CÓMPUTOS Y MEDICIONES</h2>
+            <p style="color: #94a3b8; font-size: 0.7rem; margin: 3px 0 0 0; font-weight: bold; text-transform: uppercase;">S.I.G.I.V. - SEGUIMIENTO DE AVANCE DE OBRA VIAL Y CONTRACTUAL</p>
+        </div>
+    </div>
+
+    <div class="btn-bar">
+        <button id="masterLock" class="btn-status locked" onclick="toggleLock()">Sistema Bloqueado</button>
+        <button class="btn-action" id="btnAgregarFila" onclick="agregarFilaManual()" disabled>+ Agregar Fila</button>
+        <button class="btn-action" id="btnAgregarMes" onclick="agregarMesManual()" disabled>+ Agregar Mes</button>
+        <button class="btn-action" id="btnEliminar" style="border-color: #e74c3c; color: #e74c3c;" onclick="eliminarSeleccionados()" disabled>Eliminar Sel.</button>
+        <button class="btn-action" style="border-color: var(--active-green); color: var(--active-green);" onclick="guardarDatosManual()">Guardar Cambios</button>
+        <button class="btn-action" style="border-color: #f39c12; color: #f39c12;" onclick="exportarExcel()">Exportar Excel</button>
+        <button class="btn-action" style="border-color: #ff6b6b; color: #ff6b6b; margin-left: auto;" onclick="confirmarVolver()">Volver</button>
+    </div>
+
+    <div class="cuadro-wrapper">
+        <div class="table-responsive">
+            <table id="tablaComputos">
+                <thead>
+                    <tr id="filaHeaderMeses">
+                        <th rowspan="2" width="3%">Sel.</th>
+                        <th rowspan="2" width="7%">ÍTEM</th>
+                        <th rowspan="2" width="35%">DETALLE / DESCRIPCIÓN</th>
+                        <th rowspan="2" width="8%">UNIDAD</th>
+                        <th rowspan="2" width="10%">CANTIDAD</th>
+                        </tr>
+                    <tr id="filaHeaderSub">
+                        </tr>
+                </thead>
+                <tbody id="tablaCuerpo">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isUnlocked = false;
+    let cambiosSinGuardar = false;
+    let totalMesesContados = 0; 
+
+    window.onload = () => { 
+        recuperarDatosMemoria(); 
+    };
+
+    window.addEventListener('beforeunload', function (e) {
+        if (cambiosSinGuardar) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    function registrarCambio() { 
+        cambiosSinGuardar = true; 
+    }
+
+    function toggleLock() {
+        isUnlocked = !isUnlocked;
+        const btn = document.getElementById("masterLock");
+        const btnFila = document.getElementById("btnAgregarFila");
+        const btnMes = document.getElementById("btnAgregarMes");
+        const btnDel = document.getElementById("btnEliminar");
+        
+        btn.innerText = isUnlocked ? "Modo Edición Activo" : "Sistema Bloqueado";
+        btn.className = `btn-status ${isUnlocked ? 'unlocked' : 'locked'}`;
+        
+        btnFila.disabled = !isUnlocked;
+        btnMes.disabled = !isUnlocked;
+        btnDel.disabled = !isUnlocked;
+        actualizarEstadoGlobalInputs();
+    }
+
+    function actualizarEstadoGlobalInputs() {
+        document.querySelectorAll("input:not(.res-field)").forEach(element => {
+            element.disabled = !isUnlocked;
+        });
+    }
+
+    function confirmarVolver() {
+        if (cambiosSinGuardar && isUnlocked) {
+            if (!confirm("¿Desea salir sin guardar? Los cambios recientes se perderán.")) return;
+        }
+        window.location.href = 'panel_control.html'; // Corregido: Retorno directo al panel de control
+    }
+
+    function agregarColumnasHeadersMesVisual() {
+        totalMesesContados++;
+        
+        const filaHeaderMeses = document.getElementById('filaHeaderMeses');
+        const thMes = document.createElement('th');
+        thMes.className = `th-mes-header m-head-${totalMesesContados}`;
+        thMes.colSpan = 2;
+        thMes.innerText = `MES ${totalMesesContados}`;
+        filaHeaderMeses.appendChild(thMes);
+
+        const filaHeaderSub = document.getElementById('filaHeaderSub');
+        
+        const thMed = document.createElement('th');
+        thMed.className = `m-sub-${totalMesesContados}`;
+        thMed.innerText = "MEDICIÓN";
+        thMed.width = "9%";
+        
+        const thRest = document.createElement('th');
+        thRest.className = `m-sub-${totalMesesContados}`;
+        thRest.innerText = "RESTANTE";
+        thRest.width = "9%";
+
+        filaHeaderSub.appendChild(thMed);
+        filaHeaderSub.appendChild(thRest);
+    }
+
+    function agregarFilaManual() {
+        inyectarFilaHTML(Date.now(), '', '', '', '', []);
+        registrarCambio();
+    }
+
+    function agregarMesManual() {
+        agregarColumnasHeadersMesVisual();
+        
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        filas.forEach(tr => {
+            const id = tr.id.replace('fila-', '');
+            const tdMed = document.createElement('td');
+            tdMed.className = `m-cell-${totalMesesContados}`;
+            tdMed.innerHTML = `<input type="number" step="0.001" class="cell-input val-medicion" value="" oninput="recalcularCadenaFila('${id}'); registrarCambio();" ${isUnlocked ? '' : 'disabled'}>`;
+            
+            const tdRest = document.createElement('td');
+            tdRest.className = `m-cell-${totalMesesContados}`;
+            tdRest.innerHTML = `<input type="text" class="cell-input res-field val-restante" value="0.000" readonly disabled>`;
+
+            tr.appendChild(tdMed);
+            tr.appendChild(tdRest);
+            recalcularCadenaFila(id);
+        });
+        registrarCambio();
+    }
+
+    function inyectarFilaHTML(id, item, detalle, unidad, cantidad, medicionesPrevias) {
+        const tbody = document.getElementById('tablaCuerpo');
+        const tr = document.createElement('tr');
+        tr.id = `fila-${id}`;
+
+        let htmlBase = `
+            <td><input type="checkbox" class="sel-check" ${isUnlocked ? '' : 'disabled'}></td>
+            <td><input type="text" class="cell-input" value="${item}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'} placeholder="Ej: 1.1"></td>
+            <td><input type="text" class="cell-input" style="text-align: left;" value="${detalle}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'} placeholder="Descripción del cómputo..."></td>
+            <td><input type="text" class="cell-input" value="${unidad}" oninput="registrarCambio()" ${isUnlocked ? '' : 'disabled'} placeholder="m3, m2, gl"></td>
+            <td><input type="number" step="0.001" class="cell-input total-cantidad" value="${cantidad}" oninput="recalcularCadenaFila('${id}'); registrarCambio();" ${isUnlocked ? '' : 'disabled'} placeholder="0.000"></td>
+        `;
+
+        for (let m = 1; m <= totalMesesContados; m++) {
+            let medVal = medicionesPrevias[m - 1] !== undefined ? medicionesPrevias[m - 1] : "";
+            htmlBase += `
+                <td class="m-cell-${m}"><input type="number" step="0.001" class="cell-input val-medicion" value="${medVal}" oninput="recalcularCadenaFila('${id}'); registrarCambio();" ${isUnlocked ? '' : 'disabled'}></td>
+                <td class="m-cell-${m}"><input type="text" class="cell-input res-field val-restante" value="0.000" readonly disabled></td>
+            `;
+        }
+
+        tr.innerHTML = htmlBase;
+        tbody.appendChild(tr);
+        recalcularCadenaFila(id);
+    }
+
+    function recalcularCadenaFila(id) {
+        const tr = document.getElementById(`fila-${id}`);
+        if (!tr) return;
+
+        const cantidadTotal = parseFloat(tr.querySelector('.total-cantidad').value) || 0;
+        const inputsMedicion = tr.querySelectorAll('.val-medicion');
+        const inputsRestante = tr.querySelectorAll('.val-restante');
+
+        let acumuladoRestante = cantidadTotal;
+
+        for (let i = 0; i < inputsMedicion.length; i++) {
+            const medicionMesActual = parseFloat(inputsMedicion[i].value) || 0;
+            acumuladoRestante = acumuladoRestante - medicionMesActual;
+
+            inputsRestante[i].value = acumuladoRestante.toFixed(3);
+
+            inputsRestante[i].classList.remove('restante-alerta', 'restante-ok');
+            if (acumuladoRestante > 0) {
+                inputsRestante[i].classList.add('restante-alerta');
+            } else if (acumuladoRestante === 0 && cantidadTotal > 0) {
+                inputsRestante[i].classList.add('restante-ok');
+            }
+        }
+    }
+
+    function eliminarSeleccionados() {
+        if (!isUnlocked) return;
+        const seleccionados = document.querySelectorAll('.sel-check:checked');
+        if (seleccionados.length === 0) return alert("Seleccione las filas que desea eliminar.");
+        
+        if (confirm(`¿Confirma eliminar los ${seleccionados.length} ítems seleccionados?`)) {
+            seleccionados.forEach(check => {
+                check.closest('tr').remove();
+            });
+            registrarCambio();
+        }
+    }
+
+    function guardarDatosEnMemoria() {
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        let dataPack = {
+            totalMeses: totalMesesContados,
+            items: []
+        };
+
+        filas.forEach(tr => {
+            const id = tr.id.replace('fila-', '');
+            const item = tr.querySelectorAll('.cell-input')[1].value;
+            const detalle = tr.querySelectorAll('.cell-input')[2].value;
+            const unidad = tr.querySelectorAll('.cell-input')[3].value;
+            const cantidad = tr.querySelector('.total-cantidad').value;
+
+            let mediciones = [];
+            tr.querySelectorAll('.val-medicion').forEach(input => {
+                mediciones.push(input.value);
+            });
+
+            dataPack.items.push({
+                id: id,
+                item: item,
+                detalle: detalle,
+                unidad: unidad,
+                cantidad: cantidad,
+                mediciones: mediciones
+            });
+        });
+        localStorage.setItem('datosTopItemsComputosSIGIV', JSON.stringify(dataPack));
+    }
+
+    function guardarDatosManual() {
+        guardarDatosEnMemoria();
+        cambiosSinGuardar = false;
+        alert("¡Cómputos métricos e historial de mediciones guardados!");
+        if (isUnlocked) toggleLock();
+    }
+
+    function recuperarDatosMemoria() {
+        try {
+            const packAlmacenado = localStorage.getItem('datosTopItemsComputosSIGIV');
+            if (packAlmacenado) {
+                const dataPack = JSON.parse(packAlmacenado);
+                const mesesAGenerar = dataPack.totalMeses || 0;
+                
+                for (let i = 0; i < mesesAGenerar; i++) {
+                    agregarColumnasHeadersMesVisual();
+                }
+
+                if (Array.isArray(dataPack.items) && dataPack.items.length > 0) {
+                    dataPack.items.forEach(d => {
+                        inyectarFilaHTML(d.id, d.item, d.detalle, d.unidad, d.cantidad, d.mediciones || []);
+                    });
+                    return;
+                }
+            }
+        } catch (err) {
+            localStorage.removeItem('datosTopItemsComputosSIGIV');
+            totalMesesContados = 0;
+        }
+        
+        // Carga inicial por defecto
+        agregarColumnasHeadersMesVisual();
+        agregarColumnasHeadersMesVisual();
+        for (let i = 0; i < 3; i++) { 
+            inyectarFilaHTML(Date.now() + i, '', '', '', '', []); 
+        }
+    }
+
+    function exportarExcel() {
+        guardarDatosEnMemoria();
+        const filas = document.querySelectorAll('#tablaCuerpo tr');
+        if (filas.length === 0) return alert("No hay registros cargados para exportar.");
+
+        let headerRow1 = ["ÍTEM", "DETALLE / DESCRIPCIÓN", "UNIDAD", "CANTIDAD"];
+        for (let m = 1; m <= totalMesesContados; m++) {
+            headerRow1.push(`MEDICIÓN MES ${m}`, `RESTANTE MES ${m}`);
+        }
+
+        const data = [
+            ["S.I.G.I.V. - PLANILLA MATRIZ DE CÓMPUTOS Y AVANCES MENSUALES"],
+            [],
+            headerRow1
+        ];
+
+        filas.forEach(tr => {
+            const item = tr.querySelectorAll('.cell-input')[1].value;
+            const detalle = tr.querySelectorAll('.cell-input')[2].value;
+            const unidad = tr.querySelectorAll('.cell-input')[3].value;
+            const cantidad = tr.querySelector('.total-cantidad').value;
+
+            let filaDatos = [item, detalle, unidad, cantidad];
+
+            const inputsMedicion = tr.querySelectorAll('.val-medicion');
+            const inputsRestante = tr.querySelectorAll('.val-restante');
+
+            for (let i = 0; i < inputsMedicion.length; i++) {
+                filaDatos.push(inputsMedicion[i].value, inputsRestante[i].value);
+            }
+            data.push(filaDatos);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Computos_Viales");
+        XLSX.writeFile(wb, "SIGIV_Items_Computos.xlsx");
+        cambiosSinGuardar = false;
+    }
+</script>
+</body>
+</html>

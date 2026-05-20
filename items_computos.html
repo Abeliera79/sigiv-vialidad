@@ -73,12 +73,12 @@
         }
 
         .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
-        table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; color: #000; font-size: 11px; table-layout: fixed; }
         
-        th { background: #2c3e50; color: #fff; padding: 6px 8px; border: 1px solid #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
+        th { background: #2c3e50; color: #fff; padding: 6px 4px; border: 1px solid #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; }
         .th-mes-header { background: #16a085; color: #fff; padding: 4px; }
         
-        td { border: 1px solid #aaa; padding: 4px; text-align: center; font-weight: bold; }
+        td { border: 1px solid #aaa; padding: 4px; text-align: center; font-weight: bold; overflow: hidden; }
 
         /* Control de Entradas de Celdas */
         .cell-input { width: 100%; background: transparent; border: none; text-align: center; font-weight: bold; color: inherit; outline: none; font-size: 11px; box-sizing: border-box; padding: 4px; }
@@ -92,8 +92,19 @@
 
         /* Celdas calculadas o de solo lectura */
         .res-field { background: #f4f6f7 !important; color: #2c3e50 !important; }
-        .restante-alerta { color: #c0392b !important; } 
-        .restante-ok { color: #27ae60 !important; letter-spacing: 0.5px; }
+        .restante-alerta { color: #c0392b !important; font-size: 11px; } 
+        
+        /* Modificado: "Item Agotado" ahora figura en ROJO llamativo y tamaño chico */
+        .restante-ok { 
+            color: #e74c3c !important; /* Rojo Intenso de Advertencia Contractual */
+            font-weight: 800 !important;
+            letter-spacing: -0.2px !important;
+        }
+        .val-agotado {
+            font-size: 9.5px !important; 
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
 
         .sel-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--vial-teal); }
 
@@ -135,19 +146,26 @@
     <div class="cuadro-wrapper">
         <div class="table-responsive">
             <table id="tablaComputos">
+                <colgroup>
+                    <col style="width: 3%;">
+                    <col style="width: 7%;">
+                    <col style="width: 32%;">
+                    <col style="width: 7%;">
+                    <col style="width: 9%;">
+                </colgroup>
                 <thead>
                     <tr id="filaHeaderMeses">
-                        <th rowspan="2" width="3%">Sel.</th>
-                        <th rowspan="2" width="7%">ÍTEM</th>
-                        <th rowspan="2" width="35%">DETALLE / DESCRIPCIÓN</th>
-                        <th rowspan="2" width="8%">UNIDAD</th>
-                        <th rowspan="2" width="10%">CANTIDAD</th>
-                        </tr>
+                        <th rowspan="2">Sel.</th>
+                        <th rowspan="2">ÍTEM</th>
+                        <th rowspan="2">DETALLE / DESCRIPCIÓN</th>
+                        <th rowspan="2">UNIDAD</th>
+                        <th rowspan="2">CANTIDAD</th>
+                    </tr>
                     <tr id="filaHeaderSub">
-                        </tr>
+                    </tr>
                 </thead>
                 <tbody id="tablaCuerpo">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
@@ -205,6 +223,12 @@
     function agregarColumnasHeadersMesVisual(labelMesText = "", labelCertText = "") {
         totalMesesContados++;
         
+        const tbl = document.getElementById('tablaComputos');
+        const col1 = document.createElement('col'); col1.style.width = "11%";
+        const col2 = document.createElement('col'); col2.style.width = "11%";
+        tbl.querySelector('colgroup').appendChild(col1);
+        tbl.querySelector('colgroup').appendChild(col2);
+
         const filaHeaderMeses = document.getElementById('filaHeaderMeses');
         const thMes = document.createElement('th');
         thMes.className = `th-mes-header m-head-${totalMesesContados}`;
@@ -214,7 +238,7 @@
         let defaultCertLabel = labelCertText || `Cert. Nº: `;
 
         thMes.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 3px; align-items: center; width: 90%; margin: auto;">
+            <div style="display: flex; flex-direction: column; gap: 3px; align-items: center; width: 95%; margin: auto;">
                 <input type="text" class="cell-input head-input txt-periodo" value="${deFaultMesLabel}" oninput="registrarCambio()" placeholder="MES MM/AAAA" ${isUnlocked ? '' : 'disabled'}>
                 <input type="text" class="cell-input head-input txt-certificado" style="font-size: 10px; background: rgba(0,0,0,0.2) !important;" value="${defaultCertLabel}" oninput="registrarCambio()" placeholder="Cert. Nº" ${isUnlocked ? '' : 'disabled'}>
             </div>
@@ -226,12 +250,10 @@
         const thMed = document.createElement('th');
         thMed.className = `m-sub-${totalMesesContados}`;
         thMed.innerText = "MEDICIÓN";
-        thMed.width = "9%";
         
         const thRest = document.createElement('th');
         thRest.className = `m-sub-${totalMesesContados}`;
         thRest.innerText = "RESTANTE";
-        thRest.width = "9%";
 
         filaHeaderSub.appendChild(thMed);
         filaHeaderSub.appendChild(thRest);
@@ -303,12 +325,11 @@
             const medicionMesActual = parseFloat(inputsMedicion[i].value) || 0;
             acumuladoRestante = acumuladoRestante - medicionMesActual;
 
-            inputsRestante[i].classList.remove('restante-alerta', 'restante-ok');
+            inputsRestante[i].classList.remove('restante-alerta', 'restante-ok', 'val-agotado');
 
-            // Inyección inteligente de la leyenda de Item Agotado
             if (acumuladoRestante <= 0 && cantidadTotal > 0) {
                 inputsRestante[i].value = "Item Agotado";
-                inputsRestante[i].classList.add('restante-ok');
+                inputsRestante[i].classList.add('restante-ok', 'val-agotado');
             } else {
                 inputsRestante[i].value = acumuladoRestante.toFixed(3);
                 if (acumuladoRestante > 0) {
